@@ -8,7 +8,7 @@ else:
 import traci
 import sumolib
 import gym
-from traffic_signal import Signal
+from .traffic_signal import Signal
 
 
 class MultiSignal(gym.Env):

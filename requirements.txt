@@ -3,3 +3,7 @@ gym==0.18.3
 torch==1.8.1
 tensorflow==1.15.5
 pfrl==0.2.1
+eclipse-sumo
+libsumo
+traci
+sumolib

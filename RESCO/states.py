@@ -1,6 +1,6 @@
 import numpy as np
 
-from mdp_config import mdp_configs
+from .mdp_config import mdp_configs
 
 
 def drq(signals):
