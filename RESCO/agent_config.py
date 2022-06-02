@@ -1,7 +1,7 @@
+"""
 from . import rewards
 from . import states
 
-"""
 from agents.stochastic import STOCHASTIC
 from agents.maxwave import MAXWAVE
 from agents.maxpressure import MAXPRESSURE
@@ -15,20 +15,20 @@ agent_configs = {
     # *VAL configs have distance settings according to the validation scenarios
     'MAXWAVEVAL': {
         'agent': "MAXWAVE",
-        'state': states.wave,
-        'reward': rewards.wait,
+        'state': "states.wave",
+        'reward': "rewards.wait",
         'max_distance': 50
     },
     'MAXPRESSUREVAL': {
         'agent': "MAXPRESSURE",
-        'state': states.mplight,
-        'reward': rewards.wait,
+        'state': "states.mplight",
+        'reward': "rewards.wait",
         'max_distance': 9999
     },
     'MPLightVAL': {
         'agent': "MPLight",
-        'state': states.mplight,
-        'reward': rewards.pressure,
+        'state': "states.mplight",
+        'reward': "rewards.pressure",
         'max_distance': 9999,
         'BATCH_SIZE': 32,
         'GAMMA': 0.99,
@@ -40,8 +40,8 @@ agent_configs = {
     },
     'FMA2CVAL': {
         'agent': "FMA2C",
-        'state': states.fma2c,
-        'reward': rewards.fma2c,
+        'state': "states.fma2c",
+        'reward': "rewards.fma2c",
         'max_distance': 50,
         'management_acts': 4,
         'rmsp_alpha': 0.99,
@@ -66,26 +66,26 @@ agent_configs = {
 
     'STOCHASTIC': {
         'agent': "STOCHASTIC",
-        'state': states.mplight,
-        'reward': rewards.wait,
+        'state': "states.mplight",
+        'reward': "rewards.wait",
         'max_distance': 1
     },
     'MAXWAVE': {
         'agent': "MAXWAVE",
-        'state': states.wave,
-        'reward': rewards.wait,
+        'state': "states.wave",
+        'reward': "rewards.wait",
         'max_distance': 50
     },
     'MAXPRESSURE': {
         'agent': "MAXPRESSURE",
-        'state': states.mplight,
-        'reward': rewards.wait,
+        'state': "states.mplight",
+        'reward': "rewards.wait",
         'max_distance': 200
     },
     'IDQN': {
         'agent': "IDQN",
-        'state': states.drq_norm,
-        'reward': rewards.wait_norm,
+        'state': "states.drq_norm",
+        'reward': "rewards.wait_norm",
         'max_distance': 200,
         'BATCH_SIZE': 32,
         'GAMMA': 0.99,
@@ -96,14 +96,14 @@ agent_configs = {
     },
     'IPPO': {
         'agent': "IPPO",
-        'state': states.drq_norm,
-        'reward': rewards.wait_norm,
+        'state': "states.drq_norm",
+        'reward': "rewards.wait_norm",
         'max_distance': 200
     },
     'MPLight': {
         'agent': "MPLight",
-        'state': states.mplight,
-        'reward': rewards.pressure,
+        'state': "states.mplight",
+        'reward': "rewards.pressure",
         'max_distance': 200,
         'BATCH_SIZE': 32,
         'GAMMA': 0.99,
@@ -115,8 +115,8 @@ agent_configs = {
     },
     'FMA2C': {
         'agent': "FMA2C",
-        'state': states.fma2c,
-        'reward': rewards.fma2c,
+        'state': "states.fma2c",
+        'reward': "rewards.fma2c",
         'max_distance': 200,
         'management_acts': 4,
         'rmsp_alpha': 0.99,
@@ -142,8 +142,8 @@ agent_configs = {
     # *FULL configs extend state space to include obs. available to IDQN
     'MPLightFULL': {
         'agent': "MPLight",
-        'state': states.mplight_full,
-        'reward': rewards.pressure,
+        'state': "states.mplight_full",
+        'reward': "rewards.pressure",
         'max_distance': 200,
         'BATCH_SIZE': 32,
         'GAMMA': 0.99,
@@ -155,8 +155,8 @@ agent_configs = {
     },
     'FMA2CFULL': {
         'agent': "FMA2C",
-        'state': states.fma2c_full,
-        'reward': rewards.fma2c_full,
+        'state': "states.fma2c_full",
+        'reward': "rewards.fma2c_full",
         'max_distance': 200,
         'management_acts': 4,
         'rmsp_alpha': 0.99,
