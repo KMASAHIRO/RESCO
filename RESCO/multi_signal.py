@@ -14,7 +14,7 @@ from .traffic_signal import Signal
 class MultiSignal(gym.Env):
     def __init__(self, run_name, map_name, net, state_fn, reward_fn, route=None, gui=False, end_time=3600,
                  step_length=10, yellow_length=4, step_ratio=1, max_distance=200, lights=(), log_dir='/', libsumo=False,
-                 warmup=0):
+                 warmup=0, port=None):
         self.libsumo = libsumo
         print(map_name, net, state_fn.__name__, reward_fn.__name__)
         self.log_dir = log_dir
@@ -25,6 +25,7 @@ class MultiSignal(gym.Env):
         self.reward_fn = reward_fn
         self.max_distance = max_distance
         self.warmup = warmup
+        self.port = port
 
         self.end_time = end_time
         self.step_length = step_length
@@ -39,11 +40,17 @@ class MultiSignal(gym.Env):
         else:
             sumo_cmd = [sumolib.checkBinary('sumo'), '-c', net, '--no-warnings', 'True']
         if self.libsumo:
-            traci.start(sumo_cmd)
             self.sumo = traci
+            if self.port is None:
+                traci.start(sumo_cmd)
+            else:
+                traci.start(sumo_cmd, port = self.port)
         else:
-            traci.start(sumo_cmd, label = self.connection_name)
             self.sumo = traci.getConnection(self.connection_name)
+            if self.port is None:
+                traci.start(sumo_cmd, label = self.connection_name)
+            else:
+                traci.start(sumo_cmd, port = self.port, label = self.connection_name)
         self.signal_ids = self.sumo.trafficlight.getIDList()
         print('lights', len(self.signal_ids), self.signal_ids)
         valid_phases = dict()
@@ -129,11 +136,17 @@ class MultiSignal(gym.Env):
                           '--no-step-log', 'True',
                           '--no-warnings', 'True']
         if self.libsumo:
-            traci.start(self.sumo_cmd)
             self.sumo = traci
+            if self.port is None:
+                traci.start(self.sumo_cmd)
+            else:
+                traci.start(self.sumo_cmd, port = self.port)
         else:
-            traci.start(self.sumo_cmd, label=self.connection_name)
             self.sumo = traci.getConnection(self.connection_name)
+            if self.port is None:
+                traci.start(self.sumo_cmd, label=self.connection_name)
+            else:
+                traci.start(self.sumo_cmd, port = self.port, label=self.connection_name)
 
         for _ in range(self.warmup):
             self.step_sim()
