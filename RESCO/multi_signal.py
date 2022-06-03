@@ -40,17 +40,17 @@ class MultiSignal(gym.Env):
         else:
             sumo_cmd = [sumolib.checkBinary('sumo'), '-c', net, '--no-warnings', 'True']
         if self.libsumo:
-            self.sumo = traci
             if self.port is None:
                 traci.start(sumo_cmd)
             else:
                 traci.start(sumo_cmd, port = self.port)
+            self.sumo = traci
         else:
-            self.sumo = traci.getConnection(self.connection_name)
             if self.port is None:
                 traci.start(sumo_cmd, label = self.connection_name)
             else:
                 traci.start(sumo_cmd, port = self.port, label = self.connection_name)
+            self.sumo = traci.getConnection(self.connection_name)
         self.signal_ids = self.sumo.trafficlight.getIDList()
         print('lights', len(self.signal_ids), self.signal_ids)
         valid_phases = dict()
@@ -136,17 +136,17 @@ class MultiSignal(gym.Env):
                           '--no-step-log', 'True',
                           '--no-warnings', 'True']
         if self.libsumo:
-            self.sumo = traci
             if self.port is None:
                 traci.start(self.sumo_cmd)
             else:
                 traci.start(self.sumo_cmd, port = self.port)
+            self.sumo = traci
         else:
-            self.sumo = traci.getConnection(self.connection_name)
             if self.port is None:
                 traci.start(self.sumo_cmd, label=self.connection_name)
             else:
                 traci.start(self.sumo_cmd, port = self.port, label=self.connection_name)
+            self.sumo = traci.getConnection(self.connection_name)
 
         for _ in range(self.warmup):
             self.step_sim()
