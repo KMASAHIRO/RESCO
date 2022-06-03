@@ -33,6 +33,7 @@ class PolicyFunction(torch.nn.Module):
             if embedding_type == "random":
                 embedding = torch.randn(self.embedding_num, num_hidden_units)
             elif embedding_type == "one_hot":
+                self.embedding_num = num_hidden_units
                 embedding = torch.nn.functional.one_hot(torch.tensor(range(num_hidden_units)), num_classes=num_hidden_units)
             self.embedding = torch.nn.Parameter(embedding, requires_grad=False)
             self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
@@ -162,6 +163,9 @@ class Agent():
         self.is_train = is_train
         self.train_num = 0
         self.device = torch.device(device)
+
+        if embedding_type == "one_hot":
+            embedding_num = num_hidden_units
         
         self.policy_function = PolicyFunction(
             self.num_states, self.num_traffic_lights, self.num_actions, num_layers, 
