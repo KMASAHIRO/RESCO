@@ -146,9 +146,9 @@ class PolicyGradientLossWithREINFORCE(torch.nn.Module):
 class Agent():
     def __init__(
         self, num_states, num_traffic_lights, num_actions, num_layers, num_hidden_units, 
-        temperature, noise, encoder_type, lr, decay_rate, embedding_num, embedding_decay, 
-        eps, beta, embedding_no_train=False, embedding_start_train=None, is_train=True, 
-        device="cpu", model_path=None
+        temperature, noise, encoder_type, lr, decay_rate, embedding_type, embedding_num, 
+        embedding_decay, eps, beta, embedding_no_train=False, embedding_start_train=None, 
+        is_train=True, device="cpu", model_path=None
         ):
         
         self.num_states = num_states
@@ -165,7 +165,7 @@ class Agent():
         
         self.policy_function = PolicyFunction(
             self.num_states, self.num_traffic_lights, self.num_actions, num_layers, 
-            num_hidden_units, temperature, noise, encoder_type, embedding_num, 
+            num_hidden_units, temperature, noise, encoder_type, embedding_type, embedding_num, 
             embedding_decay, eps, device)
         self.policy_function.to(self.device)
 
