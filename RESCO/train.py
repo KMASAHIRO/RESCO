@@ -17,7 +17,7 @@ def train_agent(
     embedding_no_train=False, embedding_start_train=None, log_dir="./", reward_csv=None, 
     loss_csv=None, device="cpu", port=None, trial=1, libsumo=False):
     
-    csv_dir = log_dir + run_name + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
+    csv_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
 
     env = MultiSignal(
         run_name=run_name+'-tr'+str(trial), map_name=map_name,
@@ -100,7 +100,7 @@ def train_agent(
                 current_reward = list()
                 agent.save_model("best_" + model_save_path)
         
-        print(run_name + "-" + map_name + '-tr' + str(trial) + ": episodes " + str(i + 1) + " ended")
+        print(run_name + '-tr' + str(trial) + "-" + map_name + ": episodes " + str(i + 1) + " ended")
         
     env.reset()
     env.close()
