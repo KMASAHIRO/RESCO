@@ -117,10 +117,13 @@ def train_agent(
         mean_total_wait_time = list()
         for i in range(episodes):
             load_path = csv_dir + "metrics_" + str(i + 1) + ".csv"
-            dataframe = pd.read_csv(load_path).dropna(axis=0)
-            reward = dataframe["reward"].tolist()
+            dataframe = pd.read_csv(load_path, header=None).dropna(axis=0)
+            reward_str_list = list(dataframe.iloc[:,1])
+            reward_sum = list()
+            for j in range(len(reward_str_list)):
+                reward_sum.append(np.sum(list(eval(reward_str_list[j]).values())))
 
-            mean_reward.append(np.mean(reward))
+            mean_reward.append(np.mean(reward_sum))
 
         learn_num = -(-episodes // episode_per_learn)
         mean_reward_learn = list()
