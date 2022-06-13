@@ -31,7 +31,10 @@ def train_agent(
     num_states = 0
     num_actions = list()
     for id in traffic_light_ids:
-        num_states += env.obs_shape[id][0]
+        states_dim = 1
+        for i in range(len(env.obs_shape[id])):
+            states_dim *= env.obs_shape[id][i]
+        num_states += states_dim
         num_actions.append(len(env.phases[id]))
     
     agent = Agent(
