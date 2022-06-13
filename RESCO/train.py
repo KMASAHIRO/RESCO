@@ -123,7 +123,7 @@ def train_agent(
             reward_sum = list()
             for j in range(len(dataframe.index)):
                 reward_str = ",".join(list(dataframe.iloc[j, 1:1+len(traffic_light_ids)]))
-                reward_sum.append(np.sum(list(eval(reward_str_list).values())))
+                reward_sum.append(np.sum(list(eval(reward_str).values())))
 
             mean_reward.append(np.mean(reward_sum))
 
