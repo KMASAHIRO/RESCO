@@ -51,7 +51,7 @@ def train_agent(
             obs_seq = list()
         
         obs_dict = env.reset()
-        obs = np.concatenate(list(obs_dict.values()))
+        obs = np.concatenate(list(obs_dict.values())).flatten()
 
         while True:
             if encoder_type == "lstm":
@@ -71,7 +71,7 @@ def train_agent(
                     action[traffic_light_ids[k]] = chosen_actions[k]
             
             state = env.step(action)
-            obs = np.concatenate(list(state[0].values()))
+            obs = np.concatenate(list(state[0].values())).flatten()
             reward = list(state[1].values())
             current_reward.append(np.sum(reward))
             end = state[2]
