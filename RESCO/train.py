@@ -104,8 +104,7 @@ def train_agent(
                 agent.save_model("best_" + model_save_path)
         
         print(run_name + '-tr' + str(trial) + "-" + map_name + ": episodes " + str(i + 1) + " ended")
-        
-    env.reset()
+    
     env.close()
     agent.reset_batch()
     if loss_csv is not None:
