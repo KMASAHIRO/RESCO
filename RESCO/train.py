@@ -121,10 +121,10 @@ def train_agent(
         for i in range(episodes):
             load_path = csv_dir + "metrics_" + str(i + 1) + ".csv"
             dataframe = pd.read_csv(load_path, header=None).dropna(axis=0)
-            reward_str_list = list(dataframe.iloc[:,1])
             reward_sum = list()
-            for j in range(len(reward_str_list)):
-                reward_sum.append(np.sum(list(eval(reward_str_list[j]).values())))
+            for j in range(len(dataframe.index)):
+                reward_str = ",".join(list(dataframe.iloc[j, 1:1+len(traffic_light_ids)]))
+                reward_sum.append(np.sum(list(eval(reward_str_list).values())))
 
             mean_reward.append(np.mean(reward_sum))
 
