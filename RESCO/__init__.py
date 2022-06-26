@@ -1,3 +1,4 @@
+from . import analysis
 from . import module
 from . import multi_signal
 from . import rewards

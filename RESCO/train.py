@@ -6,6 +6,7 @@ import traci
 
 from .multi_signal import MultiSignal
 from .module import Agent
+from .analysis import read_csv, read_xml
 
 # 学習させる関数
 def train_agent(
@@ -14,8 +15,8 @@ def train_agent(
     end_time=3600, max_distance=200, lights=(), warmup=0, num_layers=1, num_hidden_units=512, 
     lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", lstm_len=5, 
     embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
-    embedding_no_train=False, embedding_start_train=None, log_dir="./", reward_csv=None, 
-    loss_csv=None, device="cpu", port=None, trial=1, libsumo=False):
+    embedding_no_train=False, embedding_start_train=None, log_dir="./", env_base="../RESCO/environments/", 
+    reward_csv=None, loss_csv=None, device="cpu", port=None, trial=1, libsumo=False):
     
     csv_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
 
@@ -136,4 +137,6 @@ def train_agent(
         analysis_dataframe = pd.DataFrame(analysis_data)
         analysis_dataframe.to_csv(reward_csv, index=False)
 
+    read_csv(log_dir)
+    read_xml(log_dir, env_base)
     agent.save_model(model_save_path)
