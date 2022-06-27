@@ -55,7 +55,7 @@ def train_agent(
             obs_seq = list()
         
         obs_dict = env.reset()
-        obs_list = [np.flatten(obs_i) for obs_i in list(obs_dict.values())]
+        obs_list = [obs_i.flatten() for obs_i in list(obs_dict.values())]
         obs = np.concatenate(obs_list)
 
         while True:
@@ -76,7 +76,7 @@ def train_agent(
                     action[traffic_light_ids[k]] = chosen_actions[k]
             
             state = env.step(action)
-            obs_list = [np.flatten(obs_i) for obs_i in list(state[0].values())]
+            obs_list = [obs_i.flatten() for obs_i in list(state[0].values())]
             obs = np.concatenate(obs_list)
             reward = list(state[1].values())
             current_reward.append(np.sum(reward))
