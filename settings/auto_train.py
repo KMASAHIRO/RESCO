@@ -20,10 +20,10 @@ if __name__ == "__main__":
     env_base = env_config.get("DEFAULT", "traffic_map_path")
     port = int(env_config.get("DEFAULT", "port"))
 
-    config_agent_name = train_config.get("DEFAULT", "agent_name")
-    episodes = train_config.get("DEFAULT", "episodes")
-    episode_per_learn = train_config.get("DEFAULT", "episode_per_learn")
-    lr = train_config.get("DEFAULT", "lr")
+    config_agent_name = train_config.get("param", "agent_name")
+    episodes = train_config.get("param", "episodes")
+    episode_per_learn = train_config.get("param", "episode_per_learn")
+    lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
     
     map_config = map_configs[map_name]
@@ -61,9 +61,6 @@ if __name__ == "__main__":
             else:
                 op_cmd = ["--" + op, val]
             python_cmd.extend(op_cmd)
-        
-        if "device" not in experiments[dir_name].keys():
-            python_cmd.extend(["--device", device])
         
         port += 1
 
