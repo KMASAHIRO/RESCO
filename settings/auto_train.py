@@ -32,7 +32,7 @@ if __name__ == "__main__":
     sections = train_config.sections()
     experiments = dict()
     for sec in sections:
-        if sec != "DEFAULT":
+        if sec != "DEFAULT" and sec != "param":
             experiments[sec] = dict(train_config.items(sec))
 
     for dir_name in experiments.keys():

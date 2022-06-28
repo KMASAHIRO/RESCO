@@ -110,3 +110,6 @@ if __name__=="__main__":
         episode_num = int(file_num.stdout)//2 + 1
         logger.debug("episode: " + str(episode_num))
         logger.exception("The program stopped because of this error.")
+    finally:
+        log_path = args.log_dir + args.run_name + "-tr1-" + args.map_name + "-" + str(len(lights)) + "-" + state_f.__name__ + "-" + reward_f.__name__
+        subprocess.run(["rm", "-r", log_path])
