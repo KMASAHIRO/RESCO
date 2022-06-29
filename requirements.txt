@@ -1,6 +1,5 @@
 numpy==1.16.5
 gym==0.18.3
-torch==1.8.1
 pfrl==0.2.1
 eclipse-sumo
 libsumo
