@@ -115,7 +115,7 @@ def read_xml(log_dir, env_base):
                         except Exception as e:
                             #raise e
                             break
-                    route_file_name = env_base + map_name + os.sep + map_name + '_' + str(1) + '.rou.xml'
+                    route_file_name = env_base + map_name + os.sep + map_name + '_' + str(i) + '.rou.xml'
 
                     if metric == 'timeLoss':    # Calc. departure delays
                         try:
