@@ -73,14 +73,15 @@ class OriginalModel(torch.nn.Module):
             x = self.relu(x)
         
         if self.training:
-            x = x + torch.normal(torch.zeros(x.shape[-1]), torch.ones(x.shape[-1])*self.noise).to(self.device)
+            x = x + torch.normal(torch.zeros(x.shape), torch.ones(x.shape)*self.noise).to(self.device)
         
         return x
     
     def lstm_encoder(self, inputs):
-        x = inputs.unsqueeze(0)
+        if len(inputs.shape) == 2:
+            x = inputs.unsqueeze(0)
         _, (x, _) = self.lstm(x)
-        x = x.reshape(-1)
+        x = x.reshape(x.shape[0], -1)
         x = self.fc_first(x)
 
         x = self.relu(x)
@@ -89,7 +90,7 @@ class OriginalModel(torch.nn.Module):
             x = self.relu(x)
         
         if self.training:
-            x = x + torch.normal(torch.zeros(x.shape[-1]), torch.ones(x.shape[-1])*self.noise).to(self.device)
+            x = x + torch.normal(torch.zeros(x.shape), torch.ones(x.shape)*self.noise).to(self.device)
         
         return x
     
@@ -113,8 +114,13 @@ class OriginalModel(torch.nn.Module):
     def forward(self, inputs):
         if self.encoder_type == "vq" and self.training:
             x, beta_loss, vector, embedding_idx = self.encoder(inputs)
-            self.beta_loss_list.append(beta_loss)
-            self.middle_outputs[embedding_idx].append(vector)
+            if len(beta_loss.shape) == 0:
+                self.beta_loss_list.append(beta_loss)
+                self.middle_outputs[embedding_idx].append(vector)
+            else:
+                self.beta_loss.extend(beta_loss)
+                for i in range(len(embedding_idx)):
+                    self.middle_outputs[embedding_idx[i]].append(vector[i])
         else:
             x = self.encoder(inputs)
 
@@ -122,7 +128,7 @@ class OriginalModel(torch.nn.Module):
         actions_prob = self.softmax(actions_outputs/self.temperature)
         value = self.fc_value_layer(x)
         
-        return actions_prob, value
+        return torch.distributions.categorical.Categorical(actions_prob), value
     
     def return_vq_info(self):
         return self.beta, self.beta_loss_list, self.middle_outputs
