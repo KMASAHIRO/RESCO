@@ -106,7 +106,7 @@ class OriginalModel(torch.nn.Module):
         if len(vector.shape) == 1:
             embedding_idx = (vector - self.embedding).pow(2).sum(-1).argmin(-1)
         else:
-            embedding_idx = (vector.unsqueeze(1) - self.embedding).pow(2).sum(-1).argmin(-1)
+            embedding_idx = (vector.unsqueeze(1) - self.embedding.unsqueeze(0)).pow(2).sum(-1).argmin(-1)
 
         quantize = x + (self.embedding[embedding_idx] - vector)
         if self.training:
@@ -122,7 +122,7 @@ class OriginalModel(torch.nn.Module):
                 self.beta_loss_list.append(beta_loss)
                 self.middle_outputs[embedding_idx].append(vector)
             else:
-                self.beta_loss.extend(beta_loss)
+                self.beta_loss_list.extend(beta_loss)
                 for i in range(len(embedding_idx)):
                     self.middle_outputs[embedding_idx[i]].append(vector[i])
         else:
