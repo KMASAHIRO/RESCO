@@ -11,7 +11,7 @@ import logging
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_type", type=str, default="original")
-    parser.add_argument("--PPO_model_type", type=str, default="original")
+    parser.add_argument("--ppo_model_type", type=str, default="original")
     parser.add_argument("--run_name", type=str, required=True)
     parser.add_argument("--map_name", type=str, required=True)
     parser.add_argument("-n", "--net_file", type=str, required=True)

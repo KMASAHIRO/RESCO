@@ -21,7 +21,7 @@ if __name__ == "__main__":
     port = int(env_config.get("DEFAULT", "port"))
 
     model_type = train_config.get("DEFAULT", "model_type")
-    PPO_model_type = train_config.get("DEFAULT", "PPO_model_type")
+    ppo_model_type = train_config.get("DEFAULT", "ppo_model_type")
     config_agent_name = train_config.get("param", "agent_name")
     episodes = train_config.get("param", "episodes")
     episode_per_learn = train_config.get("param", "episode_per_learn")
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         model_save_path = map_name + "_" + config_agent_name + "_" + dir_name + "_policy-function.pth"
         run_name = config_agent_name + "_" + dir_name
         python_cmd = [
-            "python", train_path, "--model_type", model_type, "--PPO_model_type", PPO_model_type, 
+            "python", train_path, "--model_type", model_type, "--ppo_model_type", ppo_model_type, 
             "--run_name", run_name, "--map_name", map_name, "--net_file", map_dir + map_config["net"], 
             "--state_f", str(agent_config["state"]), "--reward_f", str(agent_config["reward"]), 
             "--model_save_path", model_save_path, "--episodes", episodes, "--episode_per_learn", episode_per_learn, 
