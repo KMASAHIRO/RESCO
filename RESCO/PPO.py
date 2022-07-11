@@ -103,7 +103,10 @@ class OriginalModel(torch.nn.Module):
             x = self.relu(x)
         
         vector = x.detach()
-        embedding_idx = (vector - self.embedding).pow(2).sum(-1).argmin(-1)
+        if len(vector.shape) == 1:
+            embedding_idx = (vector - self.embedding).pow(2).sum(-1).argmin(-1)
+        else:
+            embedding_idx = (vector.unsqueeze(1) - self.embedding).pow(2).sum(-1).argmin(-1)
 
         quantize = x + (self.embedding[embedding_idx] - vector)
         if self.training:
