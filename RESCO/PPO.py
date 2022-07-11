@@ -224,16 +224,16 @@ def lecun_init(layer, gain=1):
 
 
 class IPPO(IndependentAgent):
-    def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, lr=None):
+    def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, lr=None, decay_rate=None):
         super().__init__(config, obs_act, map_name, thread_number)
         for key in obs_act:
             obs_space = obs_act[key][0]
             act_space = obs_act[key][1]
-            self.agents[key] = PFRLPPOAgent(config, obs_space, act_space, model_type, model_param, lr)
+            self.agents[key] = PFRLPPOAgent(config, obs_space, act_space, model_type, model_param, lr, decay_rate)
 
 
 class PFRLPPOAgent(Agent):
-    def __init__(self, config, obs_space, act_space, model_type="default", model_param={}, lr=None):
+    def __init__(self, config, obs_space, act_space, model_type="default", model_param={}, lr=None, decay_rate=None):
         super().__init__()
 
         if model_type == "default":

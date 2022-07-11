@@ -193,7 +193,7 @@ def train_PPO(
             "device": device
         }
         
-        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, lr)
+        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, lr, decay_rate)
     
     for _ in range(episodes):
         obs = env.reset()
