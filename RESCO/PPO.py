@@ -16,7 +16,8 @@ class OriginalModel(torch.nn.Module):
     def __init__(
         self, num_states, num_actions, num_layers=1, num_hidden_units=128, 
         temperature=1.0, noise=0.0, encoder_type="fc", embedding_type="random", 
-        embedding_num=5, embedding_decay=0.99, beta=0.25, eps=1e-5, device="cpu"):
+        embedding_no_train=True, embedding_num=5, embedding_decay=0.99, beta=0.25, 
+        eps=1e-5, device="cpu"):
         
         super().__init__()
         self.num_states = num_states
@@ -24,6 +25,7 @@ class OriginalModel(torch.nn.Module):
         self.temperature = temperature
         self.noise = noise
         self.encoder_type = encoder_type
+        self.embedding_no_train = embedding_no_train
         self.embedding_num = embedding_num
         self.embedding_decay = embedding_decay
         self.beta = beta
@@ -198,6 +200,8 @@ class VQ_PPO(PPO):
                 vq_loss = vq_loss / len(beta_loss_list)
 
                 loss = loss + vq_loss
+
+                self.model.reset_vq_info()
 
                 if not self.model.embedding_no_train:
                     prev_embedding_avg = self.model.embedding_avg.to("cpu")

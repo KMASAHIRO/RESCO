@@ -189,8 +189,8 @@ def train_PPO(
         model_param = {
             "num_layers": num_layers, "num_hidden_units": num_hidden_units, "temperature": temperature,
             "noise": noise, "encoder_type": encoder_type, "embedding_type": embedding_type, 
-            "embedding_num": embedding_num, "embedding_decay": embedding_decay, "beta": beta, "eps": eps,
-            "device": device
+            "embedding_no_train": embedding_no_train, "embedding_num": embedding_num, 
+            "embedding_decay": embedding_decay, "beta": beta, "eps": eps, "device": device
         }
         
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, lr, decay_rate)
