@@ -2,6 +2,7 @@ import numpy as np
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from pfrl.nn import Branched
 import pfrl.initializers
@@ -138,6 +139,13 @@ class OriginalModel(torch.nn.Module):
         self.middle_outputs = list()
         for i in range(self.embedding_num):
             self.middle_outputs.append(list())
+
+def _elementwise_clip(x, x_min, x_max):
+    """Elementwise clipping
+
+    Note: torch.clamp supports clipping to constant intervals
+    """
+    return torch.min(torch.max(x, x_min), x_max)
 
 class VQ_PPO(PPO):
     def _lossfun(
