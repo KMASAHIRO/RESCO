@@ -20,6 +20,8 @@ if __name__ == "__main__":
     env_base = env_config.get("DEFAULT", "traffic_map_path")
     port = int(env_config.get("DEFAULT", "port"))
 
+    model_type = train_config.get("DEFAULT", "model_type")
+    PPO_model_type = train_config.get("DEFAULT", "PPO_model_type")
     config_agent_name = train_config.get("param", "agent_name")
     episodes = train_config.get("param", "episodes")
     episode_per_learn = train_config.get("param", "episode_per_learn")
@@ -42,14 +44,16 @@ if __name__ == "__main__":
         model_save_path = map_name + "_" + config_agent_name + "_" + dir_name + "_policy-function.pth"
         run_name = config_agent_name + "_" + dir_name
         python_cmd = [
-            "python", train_path, "--run_name", run_name, "--map_name", map_name, "--net_file", map_dir + map_config["net"], 
+            "python", train_path, "--model_type", model_type, "--PPO_model_type", PPO_model_type, 
+            "--run_name", run_name, "--map_name", map_name, "--net_file", map_dir + map_config["net"], 
             "--state_f", str(agent_config["state"]), "--reward_f", str(agent_config["reward"]), 
             "--model_save_path", model_save_path, "--episodes", episodes, "--episode_per_learn", episode_per_learn, 
             "--step_length", str(map_config["step_length"]), "--yellow_length", str(map_config["yellow_length"]), 
-            "--step_ratio", str(map_config["step_ratio"]), "--end_time", str(map_config["end_time"]), 
-            "--max_distance", str(agent_config["max_distance"]), "--lights", str(map_config["lights"]), 
-            "--warmup", str(map_config["warmup"]), "--lr", lr, "--log_dir", "./", "--env_base", env_base, 
-            "--reward_csv", reward_csv, "--loss_csv", loss_csv, "--port", str(port)
+            "--step_ratio", str(map_config["step_ratio"]), "--start_time", str(map_config["start_time"]), 
+            "--end_time", str(map_config["end_time"]), "--max_distance", str(agent_config["max_distance"]), 
+            "--lights", str(map_config["lights"]), "--warmup", str(map_config["warmup"]), "--lr", lr, 
+            "--log_dir", "./", "--env_base", env_base, "--reward_csv", reward_csv, "--loss_csv", loss_csv, 
+            "--port", str(port)
             ]
         
         if map_config["route"] is not None:

@@ -10,6 +10,8 @@ import logging
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model_type", type=str, default="original")
+    parser.add_argument("--PPO_model_type", type=str, default="original")
     parser.add_argument("--run_name", type=str, required=True)
     parser.add_argument("--map_name", type=str, required=True)
     parser.add_argument("-n", "--net_file", type=str, required=True)
@@ -22,6 +24,7 @@ if __name__=="__main__":
     parser.add_argument("--step_length", type=int, default=10)
     parser.add_argument("--yellow_length", type=int, default=4)
     parser.add_argument("--step_ratio", type=int, default=1)
+    parser.add_argument("--start_time", type=int, default=0)
     parser.add_argument("--end_time", type=int, default=3600)
     parser.add_argument("--max_distance", type=int, default=200)
     parser.add_argument("--lights", type=str, default="()")
@@ -90,19 +93,34 @@ if __name__=="__main__":
     lights = eval(args.lights)
 
     try:
-        train_agent(
-            run_name=args.run_name, map_name=args.map_name, net_file=args.net_file, route_file=route_file, 
-            state_f=state_f, reward_f=reward_f, model_save_path=args.model_save_path, 
-            episode_per_learn=args.episode_per_learn, episodes=args.episodes, step_length=args.step_length, 
-            yellow_length=args.yellow_length, step_ratio=args.step_ratio, end_time=args.end_time, 
-            max_distance=args.max_distance, lights=lights, warmup=args.warmup, num_layers=1, 
-            num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
-            encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
-            embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
-            embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
-            log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, device=args.device, 
-            port=port, trial=args.trial, libsumo=args.libsumo
-            )
+        if args.model_type == "original":
+            train_agent(
+                run_name=args.run_name, map_name=args.map_name, net_file=args.net_file, route_file=route_file, 
+                state_f=state_f, reward_f=reward_f, model_save_path=args.model_save_path, 
+                episode_per_learn=args.episode_per_learn, episodes=args.episodes, step_length=args.step_length, 
+                yellow_length=args.yellow_length, step_ratio=args.step_ratio, end_time=args.end_time, 
+                max_distance=args.max_distance, lights=lights, warmup=args.warmup, num_layers=1, 
+                num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
+                embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
+                embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
+                log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, device=args.device, 
+                port=port, trial=args.trial, libsumo=args.libsumo
+                )
+        elif args.model_type == "PPO":
+            train_PPO(
+                run_name=args.run_name, map_name=args.map_name, net_file=args.net_file, route_file=route_file, 
+                state_f=state_f, reward_f=reward_f, model_save_path=args.model_save_path, 
+                episode_per_learn=args.episode_per_learn, episodes=args.episodes, step_length=args.step_length, 
+                yellow_length=args.yellow_length, step_ratio=args.step_ratio, start_time=args.start_time, end_time=args.end_time, 
+                max_distance=args.max_distance, lights=lights, warmup=args.warmup, num_layers=1, 
+                num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
+                embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
+                embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, model_type=args.PPO_model_type,
+                log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, device=args.device, 
+                port=port, trial=args.trial, libsumo=args.libsumo
+                )
     except Exception as err:
         data_dir = args.log_dir + args.run_name + '-' + args.map_name + '---' + args.state_f + '-' + args.reward_f
         dir_content = subprocess.run(["find", data_dir, "-type", "f"], stdout=subprocess.PIPE, encoding="utf-8")
