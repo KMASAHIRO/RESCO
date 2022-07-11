@@ -189,7 +189,7 @@ def train_PPO(
         model_param = {
             "num_layers": num_layers, "num_hidden_units": num_hidden_units, "temperature": temperature,
             "noise": noise, "encoder_type": encoder_type, "embedding_type": embedding_type, 
-            "embedding_num": embedding_num, "emedding_decay": embedding_decay, "beta": beta, "eps": eps,
+            "embedding_num": embedding_num, "embedding_decay": embedding_decay, "beta": beta, "eps": eps,
             "device": device
         }
         
