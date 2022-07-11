@@ -263,7 +263,7 @@ class PFRLPPOAgent(Agent):
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2.5e-4, eps=1e-5)
         elif model_type == "original":
             num_states = 1
-            for dim_num in obs_shape:
+            for dim_num in obs_space:
                 num_states *= dim_num
             model_param["num_states"] = num_states
             model_param["num_actions"] = act_space
