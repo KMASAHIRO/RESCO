@@ -1,5 +1,5 @@
 from ast import parse
-from RESCO.train import train_agent
+from RESCO.train import train_agent, train_PPO
 from RESCO import states, rewards
 import subprocess
 import argparse
@@ -117,7 +117,7 @@ if __name__=="__main__":
                 num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
-                embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, model_type=args.PPO_model_type,
+                embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, model_type=args.ppo_model_type,
                 log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, device=args.device, 
                 port=port, trial=args.trial, libsumo=args.libsumo
                 )
