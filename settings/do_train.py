@@ -122,7 +122,7 @@ if __name__=="__main__":
                 port=port, trial=args.trial, libsumo=args.libsumo
                 )
     except Exception as err:
-        data_dir = args.log_dir + args.run_name + '-' + args.map_name + '---' + args.state_f + '-' + args.reward_f
+        data_dir = args.log_dir + args.run_name + '-tr' + str(args.trial) + '-' + args.map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__
         dir_content = subprocess.run(["find", data_dir, "-type", "f"], stdout=subprocess.PIPE, encoding="utf-8")
         file_num = subprocess.run(["wc", "-l"], input=dir_content.stdout, stdout=subprocess.PIPE, encoding="utf-8")
         episode_num = int(file_num.stdout)//2 + 1
