@@ -167,6 +167,7 @@ def train_PPO(
         lights=lights, gui=False, log_dir=log_dir, libsumo=libsumo, 
         warmup=warmup, port=port)
 
+    traffic_light_ids = env.all_ts_ids
 
     agt_config = agent_configs["IPPO"]
 
