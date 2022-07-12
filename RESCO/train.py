@@ -110,6 +110,9 @@ def train_agent(
         
         print(run_name + '-tr' + str(trial) + "-" + map_name + ": episodes " + str(i + 1) + " ended")
     
+    if learn_episodes[-1] != episodes:
+        learn_episodes.append(episodes)
+
     env.close()
     agent.reset_batch()
     if loss_csv is not None:
@@ -216,7 +219,10 @@ def train_PPO(
         mean_reward = list()
         mean_total_stopped = list()
         mean_total_wait_time = list()
+        learn_episodes = list()
         for i in range(episodes):
+            if (i+1) % episode_per_learn == 0 or (i+1) == episodes:
+                learn_episodes.append(i+1)
             load_path = csv_dir + "metrics_" + str(i + 1) + ".csv"
             dataframe = pd.read_csv(load_path, header=None).dropna(axis=0)
             reward_sum = list()
