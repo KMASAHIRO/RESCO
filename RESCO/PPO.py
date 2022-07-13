@@ -108,7 +108,6 @@ class OriginalModel(torch.nn.Module):
             x = self.relu(x)
         
         vector = x.detach()
-        print(vector.shape, self.embedding.shape)
         if len(vector.shape) == 1:
             embedding_idx = (vector - self.embedding).pow(2).sum(-1).argmin(-1)
         else:
@@ -124,7 +123,7 @@ class OriginalModel(torch.nn.Module):
     def forward(self, inputs):
         if self.encoder_type == "vq" and self.training:
             x, beta_loss, vector, embedding_idx = self.encoder(inputs)
-            if len(beta_loss.shape) != 0:
+            if len(beta_loss.shape) != 0 and beta_loss.shape[0] > 1:
                 self.beta_loss_list.extend(beta_loss)
                 for i in range(len(embedding_idx)):
                     self.middle_outputs[embedding_idx[i]].append(vector[i])
