@@ -25,6 +25,7 @@ class OriginalModel(torch.nn.Module):
         self.temperature = temperature
         self.noise = noise
         self.encoder_type = encoder_type
+        self.embedding_type = embedding_type
         self.embedding_no_train = embedding_no_train
         self.embedding_num = embedding_num
         self.embedding_decay = embedding_decay
@@ -40,16 +41,18 @@ class OriginalModel(torch.nn.Module):
             self.fc_first = torch.nn.Linear(num_hidden_units, num_hidden_units)
             self.encoder = self.lstm_encoder
         elif self.encoder_type == "vq":
+            self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
+            if self.embedding_type == "random":
+                embedding = torch.randn(self.embedding_num, num_hidden_units)
+            elif self.embedding_type == "one_hot":
+                self.embedding_num = num_hidden_units
+                embedding = torch.nn.functional.one_hot(torch.tensor(range(num_hidden_units)), num_classes=num_hidden_units)
+            
             self.beta_loss_list = list()
             self.middle_outputs = list()
             for i in range(self.embedding_num):
                 self.middle_outputs.append(list())
-            self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
-            if embedding_type == "random":
-                embedding = torch.randn(self.embedding_num, num_hidden_units)
-            elif embedding_type == "one_hot":
-                self.embedding_num = num_hidden_units
-                embedding = torch.nn.functional.one_hot(torch.tensor(range(num_hidden_units)), num_classes=num_hidden_units)
+            
             self.embedding = torch.nn.Parameter(embedding, requires_grad=False)
             self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
             self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
