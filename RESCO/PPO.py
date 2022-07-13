@@ -125,8 +125,9 @@ class OriginalModel(torch.nn.Module):
             x, beta_loss, vector, embedding_idx = self.encoder(inputs)
             if len(beta_loss.shape) != 0 and beta_loss.shape[0] > 1:
                 self.beta_loss_list.extend(beta_loss)
-                for i in range(len(embedding_idx)):
-                    self.middle_outputs[embedding_idx[i]].append(vector[i])
+                if not self.embedding_no_train:
+                    for i in range(len(embedding_idx)):
+                        self.middle_outputs[embedding_idx[i]].append(vector[i])
         else:
             x = self.encoder(inputs)
 
