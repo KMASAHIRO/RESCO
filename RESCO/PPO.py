@@ -123,10 +123,8 @@ class OriginalModel(torch.nn.Module):
     def forward(self, inputs):
         if self.encoder_type == "vq" and self.training:
             x, beta_loss, vector, embedding_idx = self.encoder(inputs)
-            if len(beta_loss.shape) == 0:
-                self.beta_loss_list.append(beta_loss)
-                self.middle_outputs[embedding_idx].append(vector)
-            else:
+            if len(beta_loss.shape) != 0:
+                print(beta_loss.shape)
                 self.beta_loss_list.extend(beta_loss)
                 for i in range(len(embedding_idx)):
                     self.middle_outputs[embedding_idx[i]].append(vector[i])
