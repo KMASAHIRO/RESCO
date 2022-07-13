@@ -243,4 +243,3 @@ def train_PPO(
 
     read_csv(log_dir)
     read_xml(log_dir, env_base)
-    agent.save(model_save_path)
