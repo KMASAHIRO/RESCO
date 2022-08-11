@@ -234,7 +234,7 @@ class DefaultModel(torch.nn.Module):
                         for i in range(len(embedding_idx)):
                             self.middle_outputs[embedding_idx[i]].append(vector[i])
         
-        actions_prob = self.linear4_1(x)
+        actions_outputs = self.linear4_1(x)
         actions_prob = self.softmax(actions_outputs/self.temperature)
         value = self.linear4_2(x)
         
