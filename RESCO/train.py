@@ -187,7 +187,13 @@ def train_PPO(
         obs_act[key] = [env.obs_shape[key], len(env.phases[key]) if key in env.phases else None]
     
     if model_type == "default":
-        model_param = {"device": device}
+        model_param = {
+            "temperature": temperature, "noise": noise, "encoder_type": encoder_type, 
+            "embedding_type": embedding_type, "embedding_no_train": embedding_no_train, 
+            "embedding_num": embedding_num, "embedding_decay": embedding_decay, 
+            "beta": beta, "eps": eps, "device": device
+        }
+
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param)
     elif model_type == "original":
         model_param = {
@@ -243,3 +249,10 @@ def train_PPO(
 
     read_csv(log_dir)
     read_xml(log_dir, env_base)
+
+    num = 1
+    for model in agent.agents.values():
+        filename = "agent" + str(num)
+        path = os.path.join(log_dir, filename)
+        model.save(path)
+        num += 1

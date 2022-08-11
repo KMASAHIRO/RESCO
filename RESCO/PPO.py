@@ -146,6 +146,109 @@ class OriginalModel(torch.nn.Module):
         for i in range(self.embedding_num):
             self.middle_outputs.append(list())
 
+def lecun_init(layer, gain=1):
+    if isinstance(layer, (nn.Conv2d, nn.Linear)):
+        pfrl.initializers.init_lecun_normal(layer.weight, gain)
+        nn.init.zeros_(layer.bias)
+    else:
+        pfrl.initializers.init_lecun_normal(layer.weight_ih_l0, gain)
+        pfrl.initializers.init_lecun_normal(layer.weight_hh_l0, gain)
+        nn.init.zeros_(layer.bias_ih_l0)
+        nn.init.zeros_(layer.bias_hh_l0)
+    return layer
+
+# 先行研究での方策関数
+class DefaultModel(torch.nn.Module):
+    def __init__(
+        self, obs_space, temperature=1.0, noise=0.0, encoder_type=None,
+        embedding_type="random", embedding_no_train=True, embedding_num=5, 
+        embedding_decay=0.99, beta=0.25, eps=1e-5, device="cpu"):
+        
+        super().__init__()
+        self.temperature = temperature
+        self.noise = noise
+        self.encoder_type = encoder_type
+        self.embedding_type = embedding_type
+        self.embedding_no_train = embedding_no_train
+        self.embedding_num = embedding_num
+        self.embedding_decay = embedding_decay
+        self.beta = beta
+        self.eps = eps
+        self.device = torch.device(device)
+
+        def conv2d_size_out(size, kernel_size=2, stride=1):
+            return (size - (kernel_size - 1) - 1) // stride + 1
+
+        h = conv2d_size_out(obs_space[1])
+        w = conv2d_size_out(obs_space[2])
+
+        self.conv = lecun_init(nn.Conv2d(obs_space[0], 64, kernel_size=(2, 2)))
+        self.flatten = nn.Flatten()
+        self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
+        self.linear2 = lecun_init(nn.Linear(64, 64))
+        self.linear4_1 = lecun_init(nn.Linear(64, act_space), 1e-2)
+        self.linear4_2 = lecun_init(nn.Linear(64, 1))
+        self.relu = nn.ReLU()
+        self.softmax = torch.nn.Softmax(dim=-1)
+
+        if self.encoder_type == "vq":
+            if self.embedding_type == "random":
+                embedding = torch.randn(self.embedding_num, 64)
+            elif self.embedding_type == "one_hot":
+                self.embedding_num = 64
+                embedding = torch.nn.functional.one_hot(torch.tensor(range(64)), num_classes=64)
+            
+            self.beta_loss_list = list()
+            self.middle_outputs = list()
+            for i in range(self.embedding_num):
+                self.middle_outputs.append(list())
+            
+            self.embedding = torch.nn.Parameter(embedding, requires_grad=False)
+            self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
+            self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
+
+    def forward(self, inputs):
+        x = self.conv(inputs)
+        x = self.relu(x)
+        x = self.flatten(x)
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.linear2(x)
+        x = self.relu(x)
+
+        if self.noise != 0.0 and self.training:
+            x = x + torch.normal(torch.zeros(x.shape), torch.ones(x.shape)*self.noise).to(self.device)
+        elif self.encoder_type == "vq":
+            vector = x.detach()
+            if len(vector.shape) == 1:
+                embedding_idx = (vector - self.embedding).pow(2).sum(-1).argmin(-1)
+            else:
+                embedding_idx = (vector.unsqueeze(1) - self.embedding.unsqueeze(0)).pow(2).sum(-1).argmin(-1)
+            
+            x = x + (self.embedding[embedding_idx] - vector)
+            if self.training:
+                beta_loss = (x - self.embedding[embedding_idx]).pow(2).mean(-1)
+                if len(beta_loss.shape) != 0 and beta_loss.shape[0] > 1:
+                    self.beta_loss_list.extend(beta_loss)
+                    if not self.embedding_no_train:
+                        for i in range(len(embedding_idx)):
+                            self.middle_outputs[embedding_idx[i]].append(vector[i])
+        
+        actions_prob = self.linear4_1(x)
+        actions_prob = self.softmax(actions_outputs/self.temperature)
+        value = self.linear4_2(x)
+        
+        return torch.distributions.categorical.Categorical(actions_prob), value
+    
+    def return_vq_info(self):
+        return self.beta, self.beta_loss_list, self.middle_outputs
+    
+    def reset_vq_info(self):
+        self.beta_loss_list = list()
+        self.middle_outputs = list()
+        for i in range(self.embedding_num):
+            self.middle_outputs.append(list())
+
 def _elementwise_clip(x, x_min, x_max):
     """Elementwise clipping
 
@@ -233,18 +336,6 @@ class VQ_PPO(PPO):
 
         return loss
 
-def lecun_init(layer, gain=1):
-    if isinstance(layer, (nn.Conv2d, nn.Linear)):
-        pfrl.initializers.init_lecun_normal(layer.weight, gain)
-        nn.init.zeros_(layer.bias)
-    else:
-        pfrl.initializers.init_lecun_normal(layer.weight_ih_l0, gain)
-        pfrl.initializers.init_lecun_normal(layer.weight_hh_l0, gain)
-        nn.init.zeros_(layer.bias_ih_l0)
-        nn.init.zeros_(layer.bias_hh_l0)
-    return layer
-
-
 class IPPO(IndependentAgent):
     def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, lr=None, decay_rate=None):
         super().__init__(config, obs_act, map_name, thread_number)
@@ -259,29 +350,8 @@ class PFRLPPOAgent(Agent):
         super().__init__()
 
         if model_type == "default":
-            def conv2d_size_out(size, kernel_size=2, stride=1):
-                return (size - (kernel_size - 1) - 1) // stride + 1
-
-            h = conv2d_size_out(obs_space[1])
-            w = conv2d_size_out(obs_space[2])
-
-            self.model = nn.Sequential(
-                lecun_init(nn.Conv2d(obs_space[0], 64, kernel_size=(2, 2))),
-                nn.ReLU(),
-                nn.Flatten(),
-                lecun_init(nn.Linear(h*w*64, 64)),
-                nn.ReLU(),
-                lecun_init(nn.Linear(64, 64)),
-                nn.ReLU(),
-                Branched(
-                    nn.Sequential(
-                        lecun_init(nn.Linear(64, act_space), 1e-2),
-                        SoftmaxCategoricalHead()
-                    ),
-                    lecun_init(nn.Linear(64, 1))
-                )
-            )
-
+            model_param["obs_space"] = obs_space
+            self.model = DefaultModel(**model_param)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2.5e-4, eps=1e-5)
         elif model_type == "original":
             num_states = 1
