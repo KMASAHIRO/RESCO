@@ -160,7 +160,7 @@ def lecun_init(layer, gain=1):
 # 先行研究での方策関数
 class DefaultModel(torch.nn.Module):
     def __init__(
-        self, obs_space, temperature=1.0, noise=0.0, encoder_type=None,
+        self, obs_space, act_space, temperature=1.0, noise=0.0, encoder_type=None,
         embedding_type="random", embedding_no_train=True, embedding_num=5, 
         embedding_decay=0.99, beta=0.25, eps=1e-5, device="cpu"):
         
@@ -351,6 +351,7 @@ class PFRLPPOAgent(Agent):
 
         if model_type == "default":
             model_param["obs_space"] = obs_space
+            model_param["act_space"] = act_space
             self.model = DefaultModel(**model_param)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2.5e-4, eps=1e-5)
         elif model_type == "original":
