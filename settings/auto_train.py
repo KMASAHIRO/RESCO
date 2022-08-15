@@ -53,7 +53,7 @@ if __name__ == "__main__":
             "--end_time", str(map_config["end_time"]), "--max_distance", str(agent_config["max_distance"]), 
             "--lights", str(map_config["lights"]), "--warmup", str(map_config["warmup"]), "--lr", lr, 
             "--log_dir", "./", "--env_base", env_base, "--reward_csv", reward_csv, "--loss_csv", loss_csv, 
-            "--port", str(port)
+            "--save_actions", "--port", str(port)
             ]
         
         if map_config["route"] is not None:

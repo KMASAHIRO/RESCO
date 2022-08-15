@@ -1,4 +1,5 @@
 import os
+import pickle
 import torch
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ def train_agent(
     lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", lstm_len=5, 
     embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     embedding_no_train=False, embedding_start_train=None, log_dir="./", env_base="../RESCO/environments/", 
-    reward_csv=None, loss_csv=None, device="cpu", port=None, trial=1, libsumo=False):
+    reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False):
     
     csv_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
 
@@ -52,7 +53,14 @@ def train_agent(
     learn_episodes = list()
     best_reward_mean = float("-inf")
     current_reward = list()
+
+    if save_actions:
+        actions_data = list()
+
     for i in range(episodes):
+        if save_actions:
+            actions_data_episode = list()
+        
         if encoder_type == "lstm":
             obs_seq = list()
         
@@ -76,6 +84,9 @@ def train_agent(
                 action = dict()
                 for k in range(len(traffic_light_ids)):
                     action[traffic_light_ids[k]] = chosen_actions[k]
+
+            if save_actions:
+                actions_data_episode.extend(chosen_actions)
             
             state = env.step(action)
             obs_list = [obs_i.flatten() for obs_i in list(state[0].values())]
@@ -107,6 +118,9 @@ def train_agent(
                 best_reward_mean = current_reward_mean
                 current_reward = list()
                 agent.save_model("best_" + model_save_path)
+        
+        if save_actions:
+            actions_data.append(actions_data_episode)
         
         print(run_name + '-tr' + str(trial) + "-" + map_name + ": episodes " + str(i + 1) + " ended")
     
@@ -147,6 +161,10 @@ def train_agent(
     read_csv(log_dir)
     read_xml(log_dir, env_base)
     agent.save_model(model_save_path)
+    if save_actions:
+        path = os.path.join(log_dir, "actions_data.pkl")
+        with open(path, "wb") as f:
+            pickle.dump(actions_data, f)
 
 # PPOの学習
 def train_PPO(
@@ -156,8 +174,8 @@ def train_PPO(
     num_hidden_units=512, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     embedding_no_train=False, embedding_start_train=None, model_type="original", log_dir="./", 
-    env_base="../RESCO/environments/", reward_csv=None, loss_csv=None, device="cpu", port=None, 
-    trial=1, libsumo=False
+    env_base="../RESCO/environments/", reward_csv=None, loss_csv=None, save_actions=False, device="cpu", 
+    port=None, trial=1, libsumo=False
     ):
 
     csv_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
@@ -205,7 +223,11 @@ def train_PPO(
         
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, lr, decay_rate)
     
+    if save_actions:
+        actions_data = list()
+    
     for _ in range(episodes):
+        actions_data_episode = list()
         obs = env.reset()
         if model_type == "original":
             for key in obs.keys():
@@ -218,6 +240,14 @@ def train_PPO(
                 for key in obs.keys():
                     obs[key] = obs[key].flatten()
             agent.observe(obs, rew, done, info)
+            
+            if save_actions:
+                for val in act.values():
+                    actions_data_episode.append(val)
+        
+        if save_actions:
+            actions_data.append(actions_data_episode)
+
     env.close()
 
     if reward_csv is not None:
@@ -256,3 +286,8 @@ def train_PPO(
         path = os.path.join(log_dir, filename)
         model.save(path)
         num += 1
+    
+    if save_actions:
+        path = os.path.join(log_dir, "actions_data.pkl")
+        with open(path, "wb") as f:
+            pickle.dump(actions_data, f)

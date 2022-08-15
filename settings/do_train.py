@@ -43,6 +43,7 @@ if __name__=="__main__":
     parser.add_argument("--env_base", type=str, default="../RESCO/environments/")
     parser.add_argument("--reward_csv", type=str, default="")
     parser.add_argument("--loss_csv", type=str, default="")
+    parser.add_argument("--save_actions", action="store_true")
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--port", type=int, default=-1)
     parser.add_argument("--trial", type=int, default=1)
@@ -104,8 +105,8 @@ if __name__=="__main__":
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
-                log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, device=args.device, 
-                port=port, trial=args.trial, libsumo=args.libsumo
+                log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, 
+                save_actions=args.save_actions, device=args.device, port=port, trial=args.trial, libsumo=args.libsumo
                 )
         elif args.model_type == "PPO":
             train_PPO(
@@ -118,8 +119,8 @@ if __name__=="__main__":
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, model_type=args.ppo_model_type,
-                log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, device=args.device, 
-                port=port, trial=args.trial, libsumo=args.libsumo
+                log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, save_actions=args.save_actions, 
+                device=args.device, port=port, trial=args.trial, libsumo=args.libsumo
                 )
     except Exception as err:
         data_dir = args.log_dir + args.run_name + '-tr' + str(args.trial) + '-' + args.map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__

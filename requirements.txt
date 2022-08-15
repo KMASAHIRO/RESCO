@@ -5,3 +5,4 @@ eclipse-sumo
 libsumo
 traci
 sumolib
+scikit-learn
