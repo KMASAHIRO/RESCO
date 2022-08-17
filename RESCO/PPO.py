@@ -342,7 +342,7 @@ class IPPO(IndependentAgent):
         for key in obs_act:
             obs_space = obs_act[key][0]
             act_space = obs_act[key][1]
-            self.agents[key] = PFRLPPOAgent(config, obs_space, act_space, model_type, model_param, lr, decay_rate)
+            self.agents[key] = PFRLPPOAgent(config, obs_space, act_space, model_type, model_param, update_interval, minibatch_size, epochs, lr, decay_rate)
 
 
 class PFRLPPOAgent(Agent):
