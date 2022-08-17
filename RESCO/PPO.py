@@ -337,7 +337,7 @@ class VQ_PPO(PPO):
         return loss
 
 class IPPO(IndependentAgent):
-    def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, lr=None, decay_rate=None):
+    def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, update_interval=1024, minibatch_size=256, epochs=4, lr=None, decay_rate=None):
         super().__init__(config, obs_act, map_name, thread_number)
         for key in obs_act:
             obs_space = obs_act[key][0]
@@ -346,7 +346,7 @@ class IPPO(IndependentAgent):
 
 
 class PFRLPPOAgent(Agent):
-    def __init__(self, config, obs_space, act_space, model_type="default", model_param={}, lr=None, decay_rate=None):
+    def __init__(self, config, obs_space, act_space, model_type="default", model_param={}, update_interval=1024, minibatch_size=256, epochs=4, lr=None, decay_rate=None):
         super().__init__()
 
         if model_type == "default":
@@ -380,9 +380,9 @@ class PFRLPPOAgent(Agent):
             phi=lambda x: np.asarray(x, dtype=np.float32),
             clip_eps=0.1,
             clip_eps_vf=None,
-            update_interval=1024,
-            minibatch_size=256,
-            epochs=4,
+            update_interval=update_interval,
+            minibatch_size=minibatch_size,
+            epochs=epochs,
             standardize_advantages=True,
             entropy_coef=0.001,
             max_grad_norm=0.5)

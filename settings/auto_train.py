@@ -21,12 +21,23 @@ if __name__ == "__main__":
     port = int(env_config.get("DEFAULT", "port"))
 
     model_type = train_config.get("DEFAULT", "model_type")
-    ppo_model_type = train_config.get("DEFAULT", "ppo_model_type")
+    if model_type == "PPO":
+        ppo_model_type = train_config.get("DEFAULT", "ppo_model_type")
+    else:
+        ppo_model_type = "original"
     config_agent_name = train_config.get("param", "agent_name")
     episodes = train_config.get("param", "episodes")
     episode_per_learn = train_config.get("param", "episode_per_learn")
     lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
+
+    learn_options = list()
+    if train_config.get("param", "update_interval"):
+        learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
+    if train_config.get("param", "minibatch_size"):
+        learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
+    if train_config.get("param", "epochs"):
+        learn_options.extend(["--epochs", train_config.get("param", "epochs")])
     
     map_config = map_configs[map_name]
     agent_config = agent_configs[config_agent_name]
@@ -55,6 +66,8 @@ if __name__ == "__main__":
             "--log_dir", "./", "--env_base", env_base, "--reward_csv", reward_csv, "--loss_csv", loss_csv, 
             "--save_actions", "--port", str(port)
             ]
+        
+        python_cmd.extend(learn_options)
         
         if map_config["route"] is not None:
             python_cmd.extend(["--route_file", map_dir + map_config["route"]])
