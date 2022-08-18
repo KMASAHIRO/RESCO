@@ -60,7 +60,7 @@ def test_PPO(
             "embedding_num": embedding_num, "device": device
         }
         
-        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param)
+        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, load_path=model_load_path)
     
     for _ in range(episodes):
         obs = env.reset()
@@ -76,15 +76,3 @@ def test_PPO(
                     obs[key] = obs[key].flatten()
 
     env.close()
-
-    num = 1
-    for model in agent.agents.values():
-        filename = "agent" + str(num)
-        path = os.path.join(log_dir, filename)
-        model.save(path)
-        num += 1
-    
-    if save_actions:
-        path = os.path.join(log_dir, "actions_data.pkl")
-        with open(path, "wb") as f:
-            pickle.dump(actions_data, f)

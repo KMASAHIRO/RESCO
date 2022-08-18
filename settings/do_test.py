@@ -1,5 +1,5 @@
 import configparser
-from RESCO.train import train_agent, train_PPO
+from RESCO.test import test_PPO
 from RESCO import states, rewards
 from RESCO.agent_config import agent_configs
 from RESCO.map_config import map_configs
@@ -29,13 +29,14 @@ if __name__=="__main__":
     env_config.read("env_config.ini", encoding='utf-8')
     map_dir = env_config.get("DEFAULT", "RESCO_path")
     env_base = env_config.get("DEFAULT", "traffic_map_path")
-    port = int(env_config.get("DEFAULT", "port"))
+    # port = int(env_config.get("DEFAULT", "port"))
+    port = None
 
     run_name = config_agent_name + "_" + dir_name
     map_config = map_configs[map_name]
     agent_config = agent_configs[config_agent_name]
     net_file = map_dir + map_config["net"]
-    if map_config["route"] is not None:
+    if map_config["route"] is None:
         route_file = None
     else:
         route_file = map_dir + map_config["route"]
@@ -49,11 +50,12 @@ if __name__=="__main__":
     max_distance = agent_config["max_distance"]
     lights = map_config["lights"]
     warmup = map_config["warmup"]
+    trial = 1
 
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     # ファイル出力ハンドラーの設定
-    handler = logging.FileHandler(args.error_output_path)
+    handler = logging.FileHandler("error_message.log")
     handler.setLevel(logging.DEBUG)
     # 出力フォーマットの設定
     formatter = logging.Formatter('%(levelname)s  %(asctime)s  [%(name)s] %(message)s')
@@ -70,7 +72,7 @@ if __name__=="__main__":
             start_time=start_time, end_time=end_time, max_distance=max_distance, lights=lights, warmup=warmup, 
             num_layers=1, num_hidden_units=512, temperature=temperature, noise=noise, encoder_type=encoder_type, 
             lstm_len=5, embedding_type=embedding_type, embedding_num=embedding_num, model_type=model_type, 
-            log_dir=log_dir, env_base=env_base, device=device, port=port, trial=1, 
+            log_dir=log_dir, env_base=env_base, device=device, port=port, trial=trial, 
             libsumo=False, gui=gui
             )
     except Exception as err:
