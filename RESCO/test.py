@@ -18,7 +18,7 @@ def test_PPO(
     num_hidden_units=512, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, model_type="original", 
     log_dir="./", env_base="../RESCO/environments/", device="cpu", port=None, trial=1, 
-    libsumo=False, gui=False, sleep=5
+    libsumo=False, gui=False, first_sleep=5, sleep_interval=0.1
     ):
 
     csv_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
@@ -69,12 +69,13 @@ def test_PPO(
             for key in obs.keys():
                 obs[key] = obs[key].flatten()
         done = False
-        time.sleep(sleep)
+        time.sleep(first_sleep)
         while not done:
             act = agent.act(obs)
             obs, rew, done, info = env.step(act)
             if model_type == "original":
                 for key in obs.keys():
                     obs[key] = obs[key].flatten()
+            time.sleep(sleep_interval)
 
     env.close()
