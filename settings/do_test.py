@@ -24,6 +24,7 @@ if __name__=="__main__":
     log_dir = "./"
     device = "cpu"
     gui = True
+    sleep = 5
 
     env_config = configparser.ConfigParser()
     env_config.read("env_config.ini", encoding='utf-8')
@@ -73,7 +74,7 @@ if __name__=="__main__":
             num_layers=1, num_hidden_units=512, temperature=temperature, noise=noise, encoder_type=encoder_type, 
             lstm_len=5, embedding_type=embedding_type, embedding_num=embedding_num, model_type=model_type, 
             log_dir=log_dir, env_base=env_base, device=device, port=port, trial=trial, 
-            libsumo=False, gui=gui
+            libsumo=False, gui=gui, sleep=sleep
             )
     except Exception as err:
         data_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__
