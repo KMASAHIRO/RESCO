@@ -168,7 +168,7 @@ def train_agent(
 
 # PPOの学習
 def train_PPO(
-    run_name, map_name, net_file, route_file, state_f, reward_f, model_save_path=None, 
+    run_name, map_name, net_file, route_file, state_f, reward_f, 
     episode_per_learn=2, episodes=100, step_length=10, yellow_length=4, step_ratio=1, 
     start_time=0, end_time=3600, max_distance=200, lights=(), warmup=0, num_layers=1, 
     num_hidden_units=512, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 

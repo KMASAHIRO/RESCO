@@ -114,9 +114,9 @@ if __name__=="__main__":
         elif args.model_type == "PPO":
             train_PPO(
                 run_name=args.run_name, map_name=args.map_name, net_file=args.net_file, route_file=route_file, 
-                state_f=state_f, reward_f=reward_f, model_save_path=args.model_save_path, 
-                episode_per_learn=args.episode_per_learn, episodes=args.episodes, step_length=args.step_length, 
-                yellow_length=args.yellow_length, step_ratio=args.step_ratio, start_time=args.start_time, end_time=args.end_time, 
+                state_f=state_f, reward_f=reward_f, episode_per_learn=args.episode_per_learn, 
+                episodes=args.episodes, step_length=args.step_length, yellow_length=args.yellow_length, 
+                step_ratio=args.step_ratio, start_time=args.start_time, end_time=args.end_time, 
                 max_distance=args.max_distance, lights=lights, warmup=args.warmup, num_layers=1, 
                 num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 

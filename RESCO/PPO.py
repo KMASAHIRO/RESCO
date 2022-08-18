@@ -337,12 +337,18 @@ class VQ_PPO(PPO):
         return loss
 
 class IPPO(IndependentAgent):
-    def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, update_interval=1024, minibatch_size=256, epochs=4, lr=None, decay_rate=None):
+    def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, update_interval=1024, minibatch_size=256, epochs=4, lr=None, decay_rate=None, load_path=[]):
         super().__init__(config, obs_act, map_name, thread_number)
         for key in obs_act:
             obs_space = obs_act[key][0]
             act_space = obs_act[key][1]
             self.agents[key] = PFRLPPOAgent(config, obs_space, act_space, model_type, model_param, update_interval, minibatch_size, epochs, lr, decay_rate)
+        
+        if load_path != []:
+            i = 0
+            for key in obs_act:
+                self.agents[key].load(load_path[i])
+                i += 1
 
 
 class PFRLPPOAgent(Agent):
@@ -398,3 +404,8 @@ class PFRLPPOAgent(Agent):
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
         }, path+'.pt')
+    
+    def load(self, path):
+        checkpoint = torch.load(path, map_location=self.device)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
