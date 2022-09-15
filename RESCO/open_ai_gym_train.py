@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import gym
 
-from .module import Agent
+from .module import Agent_gym
 from .agent_config import agent_configs
 
 # 学習させる関数
@@ -22,7 +22,7 @@ def train_agent_gym(
         num_states *= env.observation_space.shape[i]
     num_actions = [env.action_space.n]
     
-    agent = Agent(
+    agent = Agent_gym(
         num_states=num_states, num_traffic_lights=1, num_actions=num_actions, 
         num_layers=num_layers, num_hidden_units=num_hidden_units, temperature=temperature, noise=noise, 
         encoder_type=encoder_type, lr=lr, decay_rate=decay_rate, embedding_type=embedding_type, 
