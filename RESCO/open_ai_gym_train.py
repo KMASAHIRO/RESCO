@@ -63,7 +63,7 @@ def train_agent_gym(
             
             obs, reward, done, info = env.step(action)
             current_reward.append(reward)
-            agent.set_rewards(reward)
+            agent.set_rewards([reward])
 
             if encoder_type == "lstm":
                 obs_seq.append(obs)
