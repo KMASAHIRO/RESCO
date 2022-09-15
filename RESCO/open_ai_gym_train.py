@@ -62,7 +62,9 @@ def train_agent_gym(
                 actions_data_episode.extend(chosen_actions)
             
             obs, reward, done, info = env.step(action)
-            agent.set_rewards([0.0])
+            print(reward)
+            current_reward.append(reward)
+            agent.set_rewards([reward])
 
             if encoder_type == "lstm":
                 obs_seq.append(obs)
@@ -71,12 +73,6 @@ def train_agent_gym(
             steps += 1
             if done:
                 steps_list.append(steps)
-                if env_name == "Mountaincar-v0":
-                    current_reward.append(1/steps)
-                    agent.set_rewards([1/steps])
-                elif env_name == "CartPole-v1":
-                    current_reward.append(-1/steps)
-                    agent.set_rewards([-1/steps])
                 break
 
         if (i+1) % episode_per_learn == 0:
