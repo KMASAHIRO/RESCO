@@ -19,7 +19,8 @@ if __name__ == "__main__":
     episode_per_learn = train_config.get("param", "episode_per_learn")
     lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
-
+    
+    """
     learn_options = list()
     if train_config.get("param", "update_interval"):
         learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
@@ -27,6 +28,7 @@ if __name__ == "__main__":
         learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
     if train_config.get("param", "epochs"):
         learn_options.extend(["--epochs", train_config.get("param", "epochs")])
+    """
 
     sections = train_config.sections()
     experiments = dict()
@@ -42,10 +44,10 @@ if __name__ == "__main__":
             "python", train_path, "--model_type", model_type, "--ppo_model_type", ppo_model_type, 
             "--env_name", env_name, "--model_save_path", model_save_path, "--episodes", episodes, 
             "--episode_per_learn", episode_per_learn, "--lr", lr, "--log_dir", "./", 
-            "--reward_csv", learn_curve_csv, "--save_actions"
+            "--learn_curve_csv", learn_curve_csv, "--save_actions", "--device", device
             ]
         
-        python_cmd.extend(learn_options)
+        #python_cmd.extend(learn_options)
         
         for op,val in experiments[dir_name].items():
             if val == "True":

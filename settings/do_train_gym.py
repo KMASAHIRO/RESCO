@@ -65,7 +65,7 @@ if __name__=="__main__":
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
-                log_dir=args.log_dir, env_base=args.env_base, learn_curve_csv=learn_curve_csv,
+                log_dir=args.log_dir, learn_curve_csv=learn_curve_csv,
                 save_actions=args.save_actions, device=args.device
                 )
         elif args.model_type == "PPO":

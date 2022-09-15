@@ -20,7 +20,7 @@ def train_agent_gym(
     num_states = 1
     for i in range(len(env.observation_space.shape)):
         num_states *= env.observation_space.shape[i]
-    num_actions = env.action_space.n
+    num_actions = [env.action_space.n]
     
     agent = Agent(
         num_states=num_states, num_traffic_lights=1, num_actions=num_actions, 
@@ -53,7 +53,7 @@ def train_agent_gym(
                     chosen_actions = agent.act(obs_seq)
                     action = chosen_actions[0]
                 else:
-                    action = np.random.randint(num_actions)
+                    action = np.random.randint(num_actions[0])
             else:
                 chosen_actions = agent.act(obs)
                 action = chosen_actions[0]
