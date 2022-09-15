@@ -228,9 +228,6 @@ class Agent():
                 self.middle_outputs[embedding_idx].append(vector)
                 self.beta_loss_history.append(beta_loss)
         
-        if self.device != "cpu":
-            torch.cuda.empty_cache()
-        
         return chosen_actions
 
     def train(self, return_loss=False):
