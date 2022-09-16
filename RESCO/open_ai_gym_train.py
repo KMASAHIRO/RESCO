@@ -47,7 +47,6 @@ def train_agent_gym(
         obs = env.reset()
 
         steps = 0
-        total_reward = 0
         while True:
             if encoder_type == "lstm":
                 if len(obs_seq) == lstm_len:
@@ -63,9 +62,6 @@ def train_agent_gym(
                 actions_data_episode.extend(chosen_actions)
             
             obs, reward, done, info = env.step(action)
-            total_reward += reward
-            current_reward.append(total_reward)
-            agent.set_rewards([total_reward])
 
             if encoder_type == "lstm":
                 obs_seq.append(obs)
@@ -73,8 +69,21 @@ def train_agent_gym(
                     obs_seq.pop(0)
             steps += 1
             if done:
+                if env_name == "MountainCar-v0":
+                    if steps < 200:
+                        reward = 100.0
+                elif env_name == "CartPole-v1":
+                    if steps < 500:
+                        reward = -100.0
+                
+                current_reward.append(reward)
+                agent.set_rewards([reward])
+                
                 steps_list.append(steps)
                 break
+            else:
+                current_reward.append(reward)
+                agent.set_rewards([reward])
 
         if (i+1) % episode_per_learn == 0:
             agent.train()
