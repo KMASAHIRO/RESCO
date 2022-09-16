@@ -61,7 +61,7 @@ if __name__=="__main__":
             train_agent_gym(
                 env_name=args.env_name, model_save_path=args.model_save_path, 
                 episode_per_learn=args.episode_per_learn, episodes=args.episodes, num_layers=1, 
-                num_hidden_units=128, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                num_hidden_units=32, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
