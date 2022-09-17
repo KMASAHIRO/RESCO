@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 import gym
 
-from .module import Agent_gym
+from .module import Agent
 from .agent_config import agent_configs
 
 # 学習させる関数
 def train_agent_gym(
-    env_name, model_save_path=None, episode_per_learn=10, episodes=1400,  num_layers=1, 
+    env_name, model_save_path=None, episode_per_learn=10, episodes=1400,  max_steps=200, num_layers=1, 
     num_hidden_units=128, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     embedding_no_train=False, embedding_start_train=None, log_dir="./", learn_curve_csv=None, 
@@ -22,7 +22,7 @@ def train_agent_gym(
         num_states *= env.observation_space.shape[i]
     num_actions = [env.action_space.n]
     
-    agent = Agent_gym(
+    agent = Agent(
         num_states=num_states, num_traffic_lights=1, num_actions=num_actions, 
         num_layers=num_layers, num_hidden_units=num_hidden_units, temperature=temperature, noise=noise, 
         encoder_type=encoder_type, lr=lr, decay_rate=decay_rate, embedding_type=embedding_type, 
@@ -47,7 +47,7 @@ def train_agent_gym(
         obs = env.reset()
 
         steps = 0
-        while True:
+        for j in range(max_steps):
             if encoder_type == "lstm":
                 if len(obs_seq) == lstm_len:
                     chosen_actions = agent.act(obs_seq)
@@ -62,6 +62,8 @@ def train_agent_gym(
                 actions_data_episode.extend(chosen_actions)
             
             obs, reward, done, info = env.step(action)
+            current_reward.append(reward)
+            agent.set_rewards([reward])
 
             if encoder_type == "lstm":
                 obs_seq.append(obs)
@@ -69,21 +71,7 @@ def train_agent_gym(
                     obs_seq.pop(0)
             steps += 1
             if done:
-                if env_name == "MountainCar-v0":
-                    if steps < 200:
-                        reward = 100.0
-                elif env_name == "CartPole-v1":
-                    if steps < 500:
-                        reward = -100.0
-                
-                current_reward.append(reward)
-                agent.set_rewards([reward])
-                
                 steps_list.append(steps)
-                break
-            else:
-                current_reward.append(reward)
-                agent.set_rewards([reward])
 
         if (i+1) % episode_per_learn == 0:
             agent.train()
