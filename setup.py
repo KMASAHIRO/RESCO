@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name='RESCO',
-    version='0.6.5',
+    version='0.6.6',
     packages=['RESCO',],
     install_requires=open('requirements.txt').read().splitlines(),
     url='https://github.com/KMASAHIRO/RESCO',
