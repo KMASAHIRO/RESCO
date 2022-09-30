@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='RESCO',
-    version='0.6.6',
+    version='0.6.7',
     packages=['RESCO',],
     install_requires=open('requirements.txt').read().splitlines(),
     url='https://github.com/KMASAHIRO/RESCO',

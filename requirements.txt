@@ -3,7 +3,7 @@ numpy
 gym
 pfrl==0.2.1
 #eclipse-sumo
-libsumo
-traci
-sumolib
+#libsumo
+#traci
+#sumolib
 scikit-learn
