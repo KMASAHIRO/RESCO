@@ -1,5 +1,5 @@
 numpy
-gym==0.18.3
+#gym==0.18.3
 pfrl==0.2.1
 eclipse-sumo
 libsumo
