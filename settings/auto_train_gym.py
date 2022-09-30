@@ -16,6 +16,7 @@ if __name__ == "__main__":
     else:
         ppo_model_type = "original"
     episodes = train_config.get("param", "episodes")
+    max_steps = train_config.get("param", "max_steps")
     episode_per_learn = train_config.get("param", "episode_per_learn")
     lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
@@ -43,8 +44,9 @@ if __name__ == "__main__":
         python_cmd = [
             "python", train_path, "--model_type", model_type, "--ppo_model_type", ppo_model_type, 
             "--env_name", env_name, "--model_save_path", model_save_path, "--episodes", episodes, 
-            "--episode_per_learn", episode_per_learn, "--lr", lr, "--log_dir", "./", 
-            "--learn_curve_csv", learn_curve_csv, "--save_actions", "--device", device
+            "--max_steps", max_steps, "--episode_per_learn", episode_per_learn, "--lr", lr, 
+            "--log_dir", "./", "--learn_curve_csv", learn_curve_csv, "--save_actions", 
+            "--device", device
             ]
         
         #python_cmd.extend(learn_options)
