@@ -2,7 +2,7 @@ numpy
 #gym==0.18.3
 gym
 pfrl==0.2.1
-eclipse-sumo
+#eclipse-sumo
 libsumo
 traci
 sumolib
