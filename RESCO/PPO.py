@@ -367,7 +367,6 @@ class PFRLPPOAgent(Agent):
             model_param["num_states"] = num_states
             model_param["num_actions"] = act_space
             
-            print(model_param)
             self.model = OriginalModel(**model_param)
 
             param_optimizer = list(self.model.named_parameters())

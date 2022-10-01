@@ -122,7 +122,7 @@ def train_PPO_gym(
     num_states = 1
     for i in range(len(env.observation_space.shape)):
         num_states *= env.observation_space.shape[i]
-    num_actions = [env.action_space.n]
+    num_actions = env.action_space.n
 
     agt_config = agent_configs["IPPO"]
 
