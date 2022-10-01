@@ -128,7 +128,7 @@ def train_PPO_gym(
 
     agt_config['log_dir'] = log_dir
     
-    obs_act = {"main": [num_states, num_actions]}
+    obs_act = {"main": [(num_states), num_actions]}
 
     map_name = "main"
     trial = 1

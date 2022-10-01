@@ -71,7 +71,7 @@ if __name__=="__main__":
                 )
         elif args.model_type == "PPO":
             train_PPO_gym(
-                env_name=args.env_name, model_save_path=args.model_save_path, 
+                env_name=args.env_name, 
                 episode_per_learn=args.episode_per_learn, episodes=args.episodes, max_steps=args.max_steps, num_layers=1, 
                 num_hidden_units=32, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
