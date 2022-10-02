@@ -201,7 +201,6 @@ def train_PPO_gym(
         print(env_name + ": episodes " + str(i + 1) + " ended")
 
     env.close()
-    agent.reset_batch()
 
     if learn_curve_csv is not None:
         learn_num = -(-episodes // episode_per_learn)

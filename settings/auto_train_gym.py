@@ -21,15 +21,16 @@ if __name__ == "__main__":
     lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
     
-    """
     learn_options = list()
-    if train_config.get("param", "update_interval"):
-        learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
-    if train_config.get("param", "minibatch_size"):
-        learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
-    if train_config.get("param", "epochs"):
-        learn_options.extend(["--epochs", train_config.get("param", "epochs")])
-    """
+    try:
+        if train_config.get("param", "update_interval"):
+            learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
+        if train_config.get("param", "minibatch_size"):
+            learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
+        if train_config.get("param", "epochs"):
+            learn_options.extend(["--epochs", train_config.get("param", "epochs")])
+    except:
+        pass
 
     sections = train_config.sections()
     experiments = dict()
