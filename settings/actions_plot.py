@@ -62,6 +62,7 @@ if __name__ == "__main__":
         delay_arg_sort = np.argsort(-delay_means)
 
         pca_vectors = pca_vectors_list[vec_num*i:vec_num*(i+1)]
+        background_vectors = np.concatenate((pca_vectors_list[:vec_num*i], pca_vectors_list[vec_num*(i+1):]))
 
         time_fig_path = fig_dir + dir_name + "_PCA_time.png"
         delay_fig_path = fig_dir + dir_name + "_PCA_delay.png"
@@ -81,6 +82,7 @@ if __name__ == "__main__":
         #ax_pca_time.plot(pca_vectors[299:400, 0], pca_vectors[299:400, 1], c="m", label="300~399")
         #ax_pca_time.plot(pca_vectors[399:, 0], pca_vectors[399:, 1], c="r", label="400~" + str(len(pca_vectors)))
 
+        ax_pca_time.scatter(background_vectors[:, 0], background_vectors[:, 1], s=5, c="#808080", marker=".", label="other actions")
         ax_pca_time.scatter(pca_vectors[:100, 0], pca_vectors[:100, 1], s=5, c="b", marker=".", label="0～99")
         ax_pca_time.scatter(pca_vectors[100:200, 0], pca_vectors[100:200, 1], s=5, c="g", marker=".", label="100～199")
         ax_pca_time.scatter(pca_vectors[200:300, 0], pca_vectors[200:300, 1], s=5, color="c", marker=".", label="200～299")
@@ -97,6 +99,7 @@ if __name__ == "__main__":
         #ax_pca_delay.plot(pca_vectors_sort[299:400, 0], pca_vectors_sort[299:400, 1], c="m", label=str(delay_means_sort[300]) + "~" + str(delay_means_sort[399]))
         #ax_pca_delay.plot(pca_vectors_sort[399:, 0], pca_vectors_sort[399:, 1], c="r", label=str(delay_means_sort[400]) + "~" + str(delay_means_sort[-1]))
 
+        ax_pca_delay.scatter(background_vectors[:, 0], background_vectors[:, 1], s=5, c="#808080", marker=".", label="other actions")
         ax_pca_delay.scatter(pca_vectors_sort[:100, 0], pca_vectors_sort[:100, 1], s=5, c="b", marker=".", label=str(delay_means_sort[0]) + "～" + str(delay_means_sort[99]))
         ax_pca_delay.scatter(pca_vectors_sort[100:200, 0], pca_vectors_sort[100:200, 1], s=5, c="g", marker=".", label=str(delay_means_sort[100]) + "～" + str(delay_means_sort[199]))
         ax_pca_delay.scatter(pca_vectors_sort[200:300, 0], pca_vectors_sort[200:300, 1], s=5, color="c", marker=".", label=str(delay_means_sort[200]) + "～" + str(delay_means_sort[299]))
