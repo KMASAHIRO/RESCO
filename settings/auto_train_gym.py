@@ -37,6 +37,8 @@ if __name__ == "__main__":
     for sec in sections:
         if sec != "DEFAULT" and sec != "param":
             experiments[sec] = dict(train_config.items(sec))
+            if "lr" not in experiments[sec].keys():
+                experiments[sec]["lr"] = lr
 
     for dir_name in experiments.keys():
         subprocess.run(["mkdir", dir_name])
@@ -45,7 +47,7 @@ if __name__ == "__main__":
         python_cmd = [
             "python", train_path, "--model_type", model_type, "--ppo_model_type", ppo_model_type, 
             "--env_name", env_name, "--model_save_path", model_save_path, "--episodes", episodes, 
-            "--max_steps", max_steps, "--episode_per_learn", episode_per_learn, "--lr", lr, 
+            "--max_steps", max_steps, "--episode_per_learn", episode_per_learn, 
             "--log_dir", "./", "--learn_curve_csv", learn_curve_csv, "--save_actions", 
             "--device", device
             ]
