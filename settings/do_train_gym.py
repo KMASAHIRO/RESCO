@@ -14,6 +14,7 @@ if __name__=="__main__":
     parser.add_argument("--episodes", type=int, default=1400)
     parser.add_argument("--max_steps", type=int, default=200)
     parser.add_argument("--lr", type=float, default=3e-5)
+    parser.add_argument("--num_hidden_units", type=int, default=128)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--noise", type=float, default=0.0)
     parser.add_argument("--encoder_type", type=str, default="fc")
@@ -62,7 +63,7 @@ if __name__=="__main__":
             train_agent_gym(
                 env_name=args.env_name, model_save_path=args.model_save_path, 
                 episode_per_learn=args.episode_per_learn, episodes=args.episodes, max_steps=args.max_steps, num_layers=1, 
-                num_hidden_units=32, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                num_hidden_units=args.num_hidden_units, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
@@ -73,7 +74,7 @@ if __name__=="__main__":
             train_PPO_gym(
                 env_name=args.env_name, 
                 episode_per_learn=args.episode_per_learn, episodes=args.episodes, max_steps=args.max_steps, num_layers=1, 
-                num_hidden_units=32, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                num_hidden_units=args.num_hidden_units, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 

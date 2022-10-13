@@ -18,6 +18,7 @@ if __name__ == "__main__":
     episodes = train_config.get("param", "episodes")
     max_steps = train_config.get("param", "max_steps")
     episode_per_learn = train_config.get("param", "episode_per_learn")
+    num_hidden_units = train_config.get("param", "num_hidden_units")
     lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
     
@@ -39,6 +40,8 @@ if __name__ == "__main__":
             experiments[sec] = dict(train_config.items(sec))
             if "lr" not in experiments[sec].keys():
                 experiments[sec]["lr"] = lr
+            if "num_hidden_units" not in experiments[sec].keys():
+                experiments[sec]["num_hidden_units"] = num_hidden_units
 
     for dir_name in experiments.keys():
         subprocess.run(["mkdir", dir_name])
