@@ -13,7 +13,7 @@ if __name__ == "__main__":
     if not os.path.exists(fig_dir):
         os.mkdir(fig_dir)
     
-    exp_list = ["base", "noise0.01", "noise0.1", "noise0.2", "temp1.5", "temp2.0", "temp3.0", "vq3", "vq5", "vq7", "vq_onehot"]
+    exp_list = ["1e-3", "1e-4", "1e-5", "1e-6", "1e-7", "1e-8"]
     
     # データ処理
     actions_vectors = list()
@@ -64,7 +64,6 @@ if __name__ == "__main__":
         ax_pca_time = fig_pca_time.add_subplot(1, 1, 1)
         ax_pca_steps = fig_pca_steps.add_subplot(1, 1, 1)
 
-        # 時系列プロット
         ax_pca_time.scatter(background_vectors[:, 0], background_vectors[:, 1], s=5, c="#808080", marker=".", label="other actions")
         ax_pca_time.scatter(pca_vectors[:100, 0], pca_vectors[:100, 1], s=5, c="b", marker=".", label="0～99")
         ax_pca_time.scatter(pca_vectors[100:200, 0], pca_vectors[100:200, 1], s=5, c="g", marker=".", label="100～199")
@@ -106,69 +105,30 @@ if __name__ == "__main__":
         plt.close(fig_pca_steps)
 
     # step数のグラフ
-    #figure()でグラフを表示する領域をつくり，figというオブジェクトにする．
-    fig_noise_reward = plt.figure(figsize=(5,5))
-    fig_temp_reward = plt.figure(figsize=(5,5))
-    fig_vq_reward = plt.figure(figsize=(5,5))
-    
-    #add_subplot()でグラフを描画する領域を追加する．引数は行，列，場所
-    ax_noise_reward = fig_noise_reward.add_subplot(1, 1, 1)
-    ax_temp_reward = fig_temp_reward.add_subplot(1, 1, 1)
-    ax_vq_reward = fig_vq_reward.add_subplot(1, 1, 1)
-    
     target_len = 0
     for i in range(len(exp_list)):
         dir_name = exp_list[i]
         reward = reward_list[i]
         reward_steps = list(range(1, len(reward)+1))
 
-        if dir_name == "base":
-            ax_noise_reward.plot(reward_steps, reward, label="baseline(0.0)")
-            ax_temp_reward.plot(reward_steps, reward, label="baseline(1.0)")
-            ax_vq_reward.plot(reward_steps, reward, label="baseline(fc)")
-        
-        if "noise" in dir_name:
-            label = dir_name.replace("noise", "")
-            ax_noise_reward.plot(reward_steps, reward, label=label)
+        #figure()でグラフを表示する領域をつくり，figというオブジェクトにする．
+        fig_reward = plt.figure(figsize=(5,5))
+        #add_subplot()でグラフを描画する領域を追加する．引数は行，列，場所
+        ax_reward = fig_reward.add_subplot(1, 1, 1)
+        # plot
+        ax_reward.plot(reward_steps, reward, label=dir_name)
+        # 凡例
+        ax_reward.legend()
+        # タイトル付け
+        ax_reward.set_title("学習回数による平均stepsの変化")
+        ax_reward.set_xlabel("networkのupdate回数")
+        ax_reward.set_ylabel("mean steps")
 
-        if "temp" in dir_name:
-            label = dir_name.replace("temp", "")
-            ax_temp_reward.plot(reward_steps, reward, label=label)
-        
-        if "vq" in dir_name:
-            label = dir_name.replace("vq", "")
-            label = label.replace("_", "")
-            ax_vq_reward.plot(reward_steps, reward, label=label)
-
-    # 凡例
-    ax_noise_reward.legend()
-    ax_temp_reward.legend()
-    ax_vq_reward.legend()
-
-    # タイトル付け
-    ax_noise_reward.set_title("中間層のnoiseによる変化")
-    ax_noise_reward.set_xlabel("networkのupdate回数")
-    ax_noise_reward.set_ylabel("reward")
-
-    ax_temp_reward.set_title("温度パラメータによる変化")
-    ax_temp_reward.set_xlabel("networkのupdate回数")
-    ax_temp_reward.set_ylabel("reward")
+        # レイアウトの設定
+        fig_reward.tight_layout()
+        # save
+        fig_reward.savefig(fig_dir + dir_name + "_steps.png")
     
-    ax_vq_reward.set_title("VQネットワークにおける離散化ベクトルの数による変化")
-    ax_vq_reward.set_xlabel("networkのupdate回数")
-    ax_vq_reward.set_ylabel("reward")
-
-    # レイアウトの設定
-    fig_noise_reward.tight_layout()
-    fig_temp_reward.tight_layout()
-    fig_vq_reward.tight_layout()
-
-    fig_noise_reward.savefig(fig_dir + "noise_steps.png")
-    fig_temp_reward.savefig(fig_dir + "temp_steps.png")
-    fig_vq_reward.savefig(fig_dir + "vq_steps.png")
-
-    # グラフを消してメモリ開放
-    plt.clf()
-    plt.close(fig_noise_reward)
-    plt.close(fig_temp_reward)
-    plt.close(fig_vq_reward)
+        # グラフを消してメモリ開放
+        plt.clf()
+        plt.close(fig_reward) 
