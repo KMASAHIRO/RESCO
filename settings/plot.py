@@ -12,7 +12,8 @@ if __name__ == "__main__":
     agent_name = "IPPO"
     exp_list = ["base", "noise0.01", "noise0.1", "noise0.2", "temp1.5", "temp2", "temp3", "vq3", "vq5", "vq7", "vq_onehot"]
     
-    os.mkdir(fig_dir)
+    if not os.path.exists(fig_dir):
+        os.mkdir(fig_dir)
     
     #figure()でグラフを表示する領域をつくり，figというオブジェクトにする．
     fig_noise_reward = plt.figure(figsize=(5,5))
