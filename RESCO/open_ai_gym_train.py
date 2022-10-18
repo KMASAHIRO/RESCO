@@ -91,7 +91,7 @@ def train_agent_gym(
         if save_actions:
             actions_data.append(actions_data_episode)
         
-        print(env_name + ": episodes " + str(i + 1) + " ended")
+        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps) + "steps")
 
     env.close()
     agent.reset_batch()
@@ -119,7 +119,7 @@ def train_PPO_gym(
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     update_interval=1024, minibatch_size=256, epochs=4, embedding_no_train=False, embedding_start_train=None, 
     log_dir="./", learn_curve_csv=None, 
-    model_type="original", save_actions=False, device="cpu"
+    model_type="original", save_actions=False, device="cpu", gui=False
     ):
 
     env = gym.make(env_name)
@@ -188,6 +188,8 @@ def train_PPO_gym(
                 actions_data_episode.extend([chosen_actions["main"]])
             
             obs, reward, done, info = env.step(action)
+            if gui:
+                env.render()
             current_reward.append(reward)
             agent.observe({"main":obs}, {"main":reward}, done, info)
 
@@ -202,7 +204,7 @@ def train_PPO_gym(
         if save_actions:
             actions_data.append(actions_data_episode)
         
-        print(env_name + ": episodes " + str(i + 1) + " ended")
+        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps) + "steps")
 
     env.close()
 
