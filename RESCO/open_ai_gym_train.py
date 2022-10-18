@@ -91,7 +91,7 @@ def train_agent_gym(
         if save_actions:
             actions_data.append(actions_data_episode)
         
-        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps) + "steps")
+        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps_list[-1]) + "steps")
 
     env.close()
     agent.reset_batch()
@@ -204,7 +204,7 @@ def train_PPO_gym(
         if save_actions:
             actions_data.append(actions_data_episode)
         
-        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps) + "steps")
+        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps_list[-1]) + "steps")
 
     env.close()
 
