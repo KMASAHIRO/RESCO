@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     for dir_name in experiments.keys():
         subprocess.run(["mkdir", dir_name])
-        learn_curve_csv = env_name + "_" + dir_name + "_reward.csv"
+        learn_curve_csv = env_name + "_" + dir_name + "_learncurve.csv"
         model_save_path = env_name + "_" + dir_name + "_policy-function.pth"
         python_cmd = [
             "python", train_path, "--model_type", model_type, "--ppo_model_type", ppo_model_type, 

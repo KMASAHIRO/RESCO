@@ -18,10 +18,11 @@ if __name__ == "__main__":
     # データ処理
     actions_vectors = list()
     reward_list = list()
+    loss_list = list()
     vec_num = 0
     for dir_name in exp_list:
         data_path = "./" + dir_name + "/actions_data.pkl"
-        csv_path = "./" + dir_name + "/" + env_name + "_" + dir_name + "_reward.csv"
+        csv_path = "./" + dir_name + "/" + env_name + "_" + dir_name + "_learncurve.csv"
 
         with open(data_path, "rb") as f:
             actions_data = pickle.load(f)
@@ -31,6 +32,8 @@ if __name__ == "__main__":
         tmp = pd.read_csv(csv_path)
         reward = tmp["mean_steps"].to_list()
         reward_list.append(reward)
+        loss = tmp["loss"].to_list()
+        loss_list.append(loss)
 
         vec_num = len(actions_data_flatten)//(steps_per_learn)
         for i in range(vec_num):
@@ -105,7 +108,6 @@ if __name__ == "__main__":
         plt.close(fig_pca_steps)
 
     # step数のグラフ
-    target_len = 0
     for i in range(len(exp_list)):
         dir_name = exp_list[i]
         reward = reward_list[i]
@@ -131,4 +133,32 @@ if __name__ == "__main__":
     
         # グラフを消してメモリ開放
         plt.clf()
-        plt.close(fig_reward) 
+        plt.close(fig_reward)
+    
+    # lossのグラフ
+    for i in range(len(exp_list)):
+        dir_name = exp_list[i]
+        loss = loss_list[i]
+        loss_steps = list(range(1, len(loss)+1))
+
+        #figure()でグラフを表示する領域をつくり，figというオブジェクトにする．
+        fig_loss = plt.figure(figsize=(5,5))
+        #add_subplot()でグラフを描画する領域を追加する．引数は行，列，場所
+        ax_loss = fig_loss.add_subplot(1, 1, 1)
+        # plot
+        ax_loss.plot(loss_steps, loss, label=dir_name)
+        # 凡例
+        ax_loss.legend()
+        # タイトル付け
+        ax_loss.set_title("学習回数によるlossの変化")
+        ax_loss.set_xlabel("networkのupdate回数")
+        ax_loss.set_ylabel("loss")
+
+        # レイアウトの設定
+        fig_loss.tight_layout()
+        # save
+        fig_loss.savefig(fig_dir + dir_name + "_loss.png")
+    
+        # グラフを消してメモリ開放
+        plt.clf()
+        plt.close(fig_loss)

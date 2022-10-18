@@ -21,7 +21,7 @@ if __name__ == "__main__":
     vec_num = 0
     for dir_name in exp_list:
         data_path = "./" + dir_name + "/actions_data.pkl"
-        csv_path = "./" + dir_name + "/" + env_name + "_" + dir_name + "_reward.csv"
+        csv_path = "./" + dir_name + "/" + env_name + "_" + dir_name + "_learncurve.csv"
 
         with open(data_path, "rb") as f:
             actions_data = pickle.load(f)

@@ -33,6 +33,7 @@ def train_agent_gym(
 
     best_reward_sum = float("-inf")
     steps_list = list()
+    loss_list = list()
     current_reward = list()
 
     if save_actions:
@@ -75,7 +76,8 @@ def train_agent_gym(
                 steps_list.append(steps)
 
         if (i+1) % episode_per_learn == 0:
-            agent.train()
+            loss = agent.train(return_loss=True)
+            loss_list.append(loss)
             agent.reset_batch()
 
             current_reward_sum = np.sum(current_reward)
@@ -98,7 +100,7 @@ def train_agent_gym(
         for i in range(learn_num):
             mean_steps.append(np.mean(steps_list[episode_per_learn * i:episode_per_learn * (i + 1)]))
 
-        analysis_data = {"mean_steps": mean_steps}
+        analysis_data = {"mean_steps": mean_steps, "loss": loss_list}
         analysis_dataframe = pd.DataFrame(analysis_data)
         analysis_dataframe.to_csv(learn_curve_csv, index=False)
 

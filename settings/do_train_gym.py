@@ -49,7 +49,7 @@ if __name__=="__main__":
 
 
     if args.learn_curve_csv == "":
-        learn_curve_csv = args.env_name + "_learn_curve.csv"
+        learn_curve_csv = args.env_name + "_learncurve.csv"
     else:
         learn_curve_csv = args.learn_curve_csv
 
