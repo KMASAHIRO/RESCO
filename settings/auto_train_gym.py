@@ -38,6 +38,8 @@ if __name__ == "__main__":
     for sec in sections:
         if sec != "DEFAULT" and sec != "param":
             experiments[sec] = dict(train_config.items(sec))
+            if "episode_per_learn" not in experiments[sec].keys():
+                experiments[sec]["episode_per_learn"] = episode_per_learn
             if "lr" not in experiments[sec].keys():
                 experiments[sec]["lr"] = lr
             if "num_hidden_units" not in experiments[sec].keys():
@@ -50,9 +52,8 @@ if __name__ == "__main__":
         python_cmd = [
             "python", train_path, "--model_type", model_type, "--ppo_model_type", ppo_model_type, 
             "--env_name", env_name, "--model_save_path", model_save_path, "--episodes", episodes, 
-            "--max_steps", max_steps, "--episode_per_learn", episode_per_learn, 
-            "--log_dir", "./", "--learn_curve_csv", learn_curve_csv, "--save_actions", 
-            "--device", device
+            "--max_steps", max_steps, "--log_dir", "./", "--learn_curve_csv", learn_curve_csv, 
+            "--save_actions", "--device", device
             ]
         
         #python_cmd.extend(learn_options)
