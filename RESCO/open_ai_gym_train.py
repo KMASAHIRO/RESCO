@@ -65,8 +65,12 @@ def train_agent_gym(
                 actions_data_episode.extend(chosen_actions)
             
             obs, reward, done, info = env.step(action)
+            if env_name == "MountainCar-v0":
+                reward += obs[0]
+            
             if gui:
                 env.render()
+            
             current_reward.append(reward)
             agent.set_rewards([reward])
 
@@ -191,8 +195,13 @@ def train_PPO_gym(
                 actions_data_episode.extend([chosen_actions["main"]])
             
             obs, reward, done, info = env.step(action)
+            
+            if env_name == "MountainCar-v0":
+                reward += obs[0]
+            
             if gui:
                 env.render()
+            
             current_reward.append(reward)
             agent.observe({"main":obs}, {"main":reward}, done, info)
 
