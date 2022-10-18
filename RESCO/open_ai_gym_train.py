@@ -15,7 +15,7 @@ def train_agent_gym(
     num_hidden_units=128, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     embedding_no_train=False, embedding_start_train=None, log_dir="./", learn_curve_csv=None, 
-    save_actions=False, device="cpu"):
+    save_actions=False, device="cpu", gui=False):
     
     env = gym.make(env_name)
     num_states = 1
@@ -64,6 +64,8 @@ def train_agent_gym(
                 actions_data_episode.extend(chosen_actions)
             
             obs, reward, done, info = env.step(action)
+            if gui:
+                env.render()
             current_reward.append(reward)
             agent.set_rewards([reward])
 
