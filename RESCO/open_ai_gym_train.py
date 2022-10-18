@@ -66,7 +66,7 @@ def train_agent_gym(
             
             obs, reward, done, info = env.step(action)
             if env_name == "MountainCar-v0":
-                reward += obs[0]
+                reward += abs(obs[0])
             
             if gui:
                 env.render()
@@ -197,7 +197,7 @@ def train_PPO_gym(
             obs, reward, done, info = env.step(action)
             
             if env_name == "MountainCar-v0":
-                reward += obs[0]
+                reward += abs(obs[0])
             
             if gui:
                 env.render()
