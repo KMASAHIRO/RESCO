@@ -49,6 +49,7 @@ def train_agent_gym(
         obs = env.reset()
 
         steps = 0
+        save_flg = False
         for j in range(max_steps):
             if encoder_type == "lstm":
                 if len(obs_seq) == lstm_len:
@@ -74,8 +75,9 @@ def train_agent_gym(
                 if len(obs_seq) > lstm_len:
                     obs_seq.pop(0)
             steps += 1
-            if done:
+            if done and not save_flg:
                 steps_list.append(steps)
+                save_flg = True
 
         if (i+1) % episode_per_learn == 0:
             loss = agent.train(return_loss=True)
@@ -91,7 +93,7 @@ def train_agent_gym(
         if save_actions:
             actions_data.append(actions_data_episode)
         
-        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps_list) + "steps")
+        print(env_name + ": episodes " + str(i + 1) + " ended", str(steps_list[-1]) + "steps")
 
     env.close()
     agent.reset_batch()
@@ -173,6 +175,7 @@ def train_PPO_gym(
         obs = env.reset()
 
         steps = 0
+        save_flg = False
         for j in range(max_steps):
             if encoder_type == "lstm":
                 if len(obs_seq) == lstm_len:
@@ -198,8 +201,9 @@ def train_PPO_gym(
                 if len(obs_seq) > lstm_len:
                     obs_seq.pop(0)
             steps += 1
-            if done:
+            if done and not save_flg:
                 steps_list.append(steps)
+                save_flg = True
         
         if save_actions:
             actions_data.append(actions_data_episode)
