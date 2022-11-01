@@ -83,8 +83,8 @@ def train_agent_gym(
                 steps_list.append(steps)
                 R = 0
                 for k in range(len(episode_reward)):
-                    R = episode_reward[-k] + gamma*R
-                    episode_reward[-k] = R
+                    R = episode_reward[-(k+1)] + gamma*R
+                    episode_reward[-(k+1)] = R
                 agent.set_rewards(episode_reward)
                 break
 
@@ -216,8 +216,8 @@ def train_PPO_gym(
                 steps_list.append(steps)
                 R = 0
                 for k in range(len(episode_data)):
-                    R = episode_data[-k][1] + gamma*R
-                    episode_data[-k][1] = R
+                    R = episode_data[-(k+1)][1] + gamma*R
+                    episode_data[-(k+1)][1] = R
                 
                 for k in range(len(episode_data)):
                     agent.observe({"main":episode_data[k][0]}, {"main":episode_data[k][1]}, episode_data[k][2], episode_data[k][3])
