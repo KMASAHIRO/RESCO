@@ -14,7 +14,7 @@ def train_agent_gym(
     env_name, model_save_path=None, episode_per_learn=10, episodes=1400,  max_steps=200, num_layers=1, 
     num_hidden_units=128, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
-    embedding_no_train=False, embedding_start_train=None, log_dir="./", learn_curve_csv=None, 
+    embedding_no_train=False, embedding_start_train=None, gamma=0.99, log_dir="./", learn_curve_csv=None, 
     save_actions=False, device="cpu", gui=False):
     
     env = gym.make(env_name)
@@ -49,7 +49,7 @@ def train_agent_gym(
         obs = env.reset()
 
         steps = 0
-        save_flg = False
+        episode_reward = list()
         for j in range(max_steps):
             if encoder_type == "lstm":
                 if len(obs_seq) == lstm_len:
@@ -72,16 +72,21 @@ def train_agent_gym(
                 env.render()
             
             current_reward.append(reward)
-            agent.set_rewards([reward])
+            episode_reward.append(reward)
 
             if encoder_type == "lstm":
                 obs_seq.append(obs)
                 if len(obs_seq) > lstm_len:
                     obs_seq.pop(0)
             steps += 1
-            if done and not save_flg:
+            if done:
                 steps_list.append(steps)
-                save_flg = True
+                R = 0
+                for i in range(len(episode_reward)):
+                    R = episode_reward[-i] + gamma*R
+                    episode_reward[-i] = R
+                agent.set_rewards(episode_reward)
+                break
 
         if (i+1) % episode_per_learn == 0:
             loss = agent.train(return_loss=True)
@@ -164,7 +169,6 @@ def train_PPO_gym(
     
     best_reward_sum = float("-inf")
     steps_list = list()
-    current_reward = list()
 
     if save_actions:
         actions_data = list()
@@ -179,7 +183,7 @@ def train_PPO_gym(
         obs = env.reset()
 
         steps = 0
-        save_flg = False
+        episode_data = list()
         for j in range(max_steps):
             if encoder_type == "lstm":
                 if len(obs_seq) == lstm_len:
@@ -195,6 +199,7 @@ def train_PPO_gym(
                 actions_data_episode.extend([chosen_actions["main"]])
             
             obs, reward, done, info = env.step(action)
+            episode_data.append([obs, reward, done, info])
             
             if env_name == "MountainCar-v0":
                 reward = 10*(obs[0]**2)
@@ -202,17 +207,22 @@ def train_PPO_gym(
             if gui:
                 env.render()
             
-            current_reward.append(reward)
-            agent.observe({"main":obs}, {"main":reward}, done, info)
-
             if encoder_type == "lstm":
                 obs_seq.append(obs)
                 if len(obs_seq) > lstm_len:
                     obs_seq.pop(0)
             steps += 1
-            if done and not save_flg:
+            if done:
                 steps_list.append(steps)
-                save_flg = True
+                R = 0
+                for i in range(len(episode_data)):
+                    R = episode_data[-i][1] + gamma*R
+                    episode_data[-i][1] = R
+                
+                for i in range(len(episode_data)):
+                    agent.observe({"main":episode_data[0]}, {"main":episode_data[1]}, episode_data[2], episode_data[3])
+
+                break
         
         if save_actions:
             actions_data.append(actions_data_episode)
