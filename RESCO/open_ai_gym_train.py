@@ -68,7 +68,7 @@ def train_agent_gym(
             if env_name == "MountainCar-v0":
                 if obs[0] >= 0.5:
                     reward = 10
-                elif obs > -0.4:
+                elif obs[0] > -0.4:
                     reward = (1.0 + obs[0])**2
                 else:
                     reward = 0.0
@@ -211,7 +211,7 @@ def train_PPO_gym(
             if env_name == "MountainCar-v0":
                 if obs[0] >= 0.5:
                     reward = 10
-                elif obs > -0.4:
+                elif obs[0] > -0.4:
                     reward = (1.0 + obs[0])**2
                 else:
                     reward = 0.0
