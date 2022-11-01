@@ -66,7 +66,14 @@ def train_agent_gym(
             
             obs, reward, done, info = env.step(action)
             if env_name == "MountainCar-v0":
-                reward = 10*(obs[0]**2)
+                if obs[0] >= 0.5:
+                    reward = 10
+                elif obs > -0.4:
+                    reward = (1.0 + obs[0])**2
+                else:
+                    reward = 0.0
+            elif env_name == "CartPole-v1":
+                reward = -(obs[0]**2 + (1.0+obs[2])**2)
             
             if gui:
                 env.render()
@@ -202,7 +209,14 @@ def train_PPO_gym(
             episode_data.append([obs, reward, done, info])
             
             if env_name == "MountainCar-v0":
-                reward = 10*(obs[0]**2)
+                if obs[0] >= 0.5:
+                    reward = 10
+                elif obs > -0.4:
+                    reward = (1.0 + obs[0])**2
+                else:
+                    reward = 0.0
+            elif env_name == "CartPole-v1":
+                reward = -(obs[0]**2 + (1.0+obs[2])**2)
             
             if gui:
                 env.render()
