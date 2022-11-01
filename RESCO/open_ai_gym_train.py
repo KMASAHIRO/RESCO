@@ -73,7 +73,7 @@ def train_agent_gym(
                 else:
                     reward = 0.0
             elif env_name == "CartPole-v1":
-                reward = -(obs[0]**2 + (1.0+obs[2])**2)
+                reward = -((1.0 + abs(obs[0]/4.8))**2 + (1.0 + abs(obs[2]/0.418))**2)
             
             if gui:
                 env.render()
@@ -216,7 +216,7 @@ def train_PPO_gym(
                 else:
                     reward = 0.0
             elif env_name == "CartPole-v1":
-                reward = -(obs[0]**2 + (1.0+obs[2])**2)
+                reward = -((1.0 + abs(obs[0]/4.8))**2 + (1.0 + abs(obs[2]/0.418))**2)
             
             if gui:
                 env.render()

@@ -128,7 +128,8 @@ class PolicyGradientLossWithREINFORCE(torch.nn.Module):
         for i in range(len(actions_prob_history)):
             chosen_action_prob = actions_prob_history[i]
             # 最大化する関数のマイナス
-            loss = loss - torch.log(chosen_action_prob) * (rewards_history[i] - ave_rewards)
+            #loss = loss - torch.log(chosen_action_prob) * (rewards_history[i] - ave_rewards)
+            loss = loss - torch.log(chosen_action_prob) * (rewards_history[i])
         
         loss = loss / len(actions_prob_history)
         
