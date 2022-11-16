@@ -53,6 +53,9 @@ class BayesianLinear(nn.Module):
         self.bias_rho = nn.Parameter(torch.Tensor(out_features).uniform_(-5,-4))
         self.bias = Gaussian(self.bias_mu, self.bias_rho)
         # Prior distributions
+        PI = 0.5
+        SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
+        SIGMA_2 = torch.cuda.FloatTensor([math.exp(-6)])
         self.weight_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2)
         self.bias_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2)
         self.log_prior = 0
