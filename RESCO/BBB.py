@@ -27,13 +27,14 @@ class Gaussian(object):
                 - ((input - self.mu) ** 2) / (2 * self.sigma ** 2)).sum()
 
 class ScaleMixtureGaussian(object):
-    def __init__(self, pi, sigma1, sigma2):
+    def __init__(self, pi, sigma1, sigma2, device):
         super().__init__()
         self.pi = pi
         self.sigma1 = sigma1
         self.sigma2 = sigma2
         self.gaussian1 = torch.distributions.Normal(0,sigma1)
         self.gaussian2 = torch.distributions.Normal(0,sigma2)
+        self.device = device
     
     def log_prob(self, input):
         prob1 = torch.exp(self.gaussian1.log_prob(input))
@@ -55,10 +56,12 @@ class BayesianLinear(nn.Module):
         self.bias = Gaussian(self.bias_mu, self.bias_rho, device)
         # Prior distributions
         PI = 0.5
-        SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
-        SIGMA_2 = torch.cuda.FloatTensor([math.exp(-6)])
-        self.weight_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2)
-        self.bias_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2)
+        #SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
+        #SIGMA_2 = torch.cuda.FloatTensor([math.exp(-6)])
+        SIGMA_1 = torch.Tensor([math.exp(-0)], device=device)
+        SIGMA_2 = torch.Tensor([math.exp(-6)], device=device)
+        self.weight_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2, device)
+        self.bias_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2, device)
         self.log_prior = 0
         self.log_variational_posterior = 0
 
