@@ -56,6 +56,9 @@ def train_agent(
 
     if save_actions:
         actions_data = list()
+    
+    if encoder_type == "noisy":
+        agent.sample_noise()
 
     for i in range(episodes):
         if save_actions:
@@ -112,6 +115,9 @@ def train_agent(
                 agent.train()
             learn_episodes.append(i+1)
             agent.reset_batch()
+
+            if encoder_type == "noisy":
+                agent.sample_noise()
 
             current_reward_mean = np.mean(current_reward)
             if current_reward_mean > best_reward_mean:
@@ -226,6 +232,8 @@ def train_PPO(
     if save_actions:
         actions_data = list()
     
+    play_steps = 0
+    agent.sample_noise()
     for _ in range(episodes):
         actions_data_episode = list()
         obs = env.reset()
@@ -240,6 +248,10 @@ def train_PPO(
                 for key in obs.keys():
                     obs[key] = obs[key].flatten()
             agent.observe(obs, rew, done, info)
+
+            play_steps += 1
+            if play_steps % update_interval == 0:
+                agent.sample_noise()
             
             if save_actions:
                 for val in act.values():

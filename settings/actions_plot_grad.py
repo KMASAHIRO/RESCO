@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # logスケールでdelay順でプロット
     delay_means = np.concatenate(delay_means_list)
     delay_log_norm = np.log(delay_means)/np.max(np.log(delay_means))
-    delay_fig_path = "PCA_delay_log.png"
+    delay_fig_path = fig_dir + "PCA_delay_log.png"
     fig_pca_delay = plt.figure(figsize=(5,5))
     ax_pca_delay = fig_pca_delay.add_subplot(1, 1, 1)
     ax_pca_delay.scatter(pca_vectors_list[:, 0], pca_vectors_list[:, 1], s=5, c=cm.jet_r(delay_log_norm), marker=".", label="delay(log)")
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # clippingでdelay順でプロット
     delay_means = np.concatenate(delay_means_list)
     delay_means_clipped = (delay_means - clip_range[map_name][0])/clip_range[map_name][1]
-    delay_fig_path = "PCA_delay_clipped.png"
+    delay_fig_path = fig_dir + "PCA_delay_clipped.png"
     fig_pca_delay = plt.figure(figsize=(5,5))
     ax_pca_delay = fig_pca_delay.add_subplot(1, 1, 1)
     ax_pca_delay.scatter(pca_vectors_list[delay_means_clipped>1.0, 0], pca_vectors_list[delay_means_clipped>1.0, 1], s=5, c="#808080", marker=".", label="other actions")

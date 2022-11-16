@@ -10,6 +10,8 @@ from pfrl.agents import PPO
 from pfrl.policies import SoftmaxCategoricalHead
 
 from .agent import IndependentAgent, Agent
+from .NoisyNet import NoisyLinear
+from .BBB import BayesianLinear
 
 # 方策関数
 class OriginalModel(torch.nn.Module):
@@ -57,15 +59,34 @@ class OriginalModel(torch.nn.Module):
             self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
             self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
             self.encoder = self.vq_encoder
+        elif self.encoder_type == "noisy":
+            self.fc_first = NoisyLinear(self.num_states, num_hidden_units)
+            self.encoder = self.fc_encoder
+        elif self.encoder_type == "bbb":
+            self.fc_first = BayesianLinear(self.num_states, num_hidden_units)
+            self.encoder = self.fc_encoder
+            self.log_priors = list()
+            self.log_variational_posteriors = list()
         
-        
-        self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
-        self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
+        if self.encoder_type == "noisy":
+            self.fc_actions_layer = NoisyLinear(num_hidden_units, self.num_actions)
+            self.fc_value_layer = NoisyLinear(num_hidden_units, 1)
+        elif self.encoder_type == "bbb":
+            self.fc_actions_layer = BayesianLinear(num_hidden_units, self.num_actions)
+            self.fc_value_layer = BayesianLinear(num_hidden_units, 1)
+        else:
+            self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
+            self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
 
         fc_layers = list()
         self.num_layers = num_layers
         for i in range(num_layers):
-            fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
+            if self.encoder_type == "noisy":
+                fc_layers.append(NoisyLinear(num_hidden_units, num_hidden_units))
+            elif self.encoder_type == "bbb":
+                fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units))
+            else:
+                fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
         self.fc_layers = torch.nn.ModuleList(fc_layers)
 
         self.relu = torch.nn.ReLU()
@@ -135,6 +156,22 @@ class OriginalModel(torch.nn.Module):
         actions_prob = self.softmax(actions_outputs/self.temperature)
         value = self.fc_value_layer(x)
         
+        if self.encoder_type == "bbb" and self.training:
+            log_prior = self.fc_first.log_prior
+            for layer in self.fc_layers:
+                log_prior = log_prior + layer.log_prior
+            log_prior = log_prior + self.fc_actions_layer.log_prio
+            log_prior = log_prior + self.fc_value_layer.log_prior
+
+            log_variational_posterior = self.fc_first.log_variational_posterior
+            for layer in self.fc_layers:
+                log_variational_posterior = log_variational_posterior + layer.log_variational_posterior
+            log_variational_posterior = log_variational_posterior + self.fc_actions_layer.log_variational_posterior
+            log_variational_posterior = log_variational_posterior + self.fc_value_layer.log_variational_posterior
+
+            self.log_priors.append(log_prior)
+            self.log_variational_posteriors.append(log_variational_posterior)
+
         return torch.distributions.categorical.Categorical(actions_prob), value
     
     def return_vq_info(self):
@@ -145,6 +182,28 @@ class OriginalModel(torch.nn.Module):
         self.middle_outputs = list()
         for i in range(self.embedding_num):
             self.middle_outputs.append(list())
+    
+    def return_bbb_info(self):
+        return self.log_priors, self.log_variational_posteriors
+    
+    def reset_bbb_info(self):
+        self.log_priors = list()
+        self.log_variational_posteriors = list()
+    
+    def sample_noise(self):
+        self.fc_first.sample_noise()
+        self.fc_actions_layer.sample_noise()
+        self.fc_value_layer.sample_noise()
+        for layer in self.fc_layers:
+            layer.sample_noise()
+    
+    def remove_noise(self):
+        self.fc_first.remove_noise()
+        self.fc_actions_layer.remove_noise()
+        self.fc_value_layer.remove_noise()
+        for layer in self.fc_layers:
+            layer.remove_noise()
+
 
 def lecun_init(layer, gain=1):
     if isinstance(layer, (nn.Conv2d, nn.Linear)):
@@ -184,10 +243,21 @@ class DefaultModel(torch.nn.Module):
 
         self.conv = lecun_init(nn.Conv2d(obs_space[0], 64, kernel_size=(2, 2)))
         self.flatten = nn.Flatten()
-        self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
-        self.linear2 = lecun_init(nn.Linear(64, 64))
-        self.linear4_1 = lecun_init(nn.Linear(64, act_space), 1e-2)
-        self.linear4_2 = lecun_init(nn.Linear(64, 1))
+        if self.encoder_type == "noisy":
+            self.linear1 = NoisyLinear(h*w*64, 64)
+            self.linear2 = NoisyLinear(64, 64)
+            self.linear4_1 = NoisyLinear(64, act_space)
+            self.linear4_2 = NoisyLinear(64, 1)
+        elif self.encoder_type == "bbb":
+            self.linear1 = BayesianLinear(h*w*64, 64)
+            self.linear2 = BayesianLinear(64, 64)
+            self.linear4_1 = BayesianLinear(64, act_space)
+            self.linear4_2 = BayesianLinear(64, 1)
+        else:
+            self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
+            self.linear2 = lecun_init(nn.Linear(64, 64))
+            self.linear4_1 = lecun_init(nn.Linear(64, act_space), 1e-2)
+            self.linear4_2 = lecun_init(nn.Linear(64, 1))
         self.relu = nn.ReLU()
         self.softmax = torch.nn.Softmax(dim=-1)
 
@@ -206,6 +276,9 @@ class DefaultModel(torch.nn.Module):
             self.embedding = torch.nn.Parameter(embedding, requires_grad=False)
             self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
             self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
+        elif self.encoder_type == "bbb":
+            self.log_priors = list()
+            self.log_variational_posteriors = list()
 
     def forward(self, inputs):
         x = self.conv(inputs)
@@ -237,6 +310,20 @@ class DefaultModel(torch.nn.Module):
         actions_outputs = self.linear4_1(x)
         actions_prob = self.softmax(actions_outputs/self.temperature)
         value = self.linear4_2(x)
+
+        if self.encoder_type == "bbb" and self.training:
+            log_prior = self.linear1.log_prior
+            log_prior = log_prior + self.linear2.log_prior
+            log_prior = log_prior + self.linear4_1.log_prior
+            log_prior = log_prior + self.linear4_2.log_prior
+
+            log_variational_posterior = self.linear1.log_variational_posterior
+            log_variational_posterior = log_variational_posterior + self.linear2.log_variational_posterior
+            log_variational_posterior = log_variational_posterior + self.linear4_1.log_variational_posterior
+            log_variational_posterior = log_variational_posterior + self.linear4_2.log_variational_posterior
+
+            self.log_priors.append(log_prior)
+            self.log_variational_posteriors.append(log_variational_posterior)
         
         return torch.distributions.categorical.Categorical(actions_prob), value
     
@@ -248,6 +335,25 @@ class DefaultModel(torch.nn.Module):
         self.middle_outputs = list()
         for i in range(self.embedding_num):
             self.middle_outputs.append(list())
+    
+    def return_bbb_info(self):
+        return self.log_priors, self.log_variational_posteriors
+    
+    def reset_bbb_info(self):
+        self.log_priors = list()
+        self.log_variational_posteriors = list()
+    
+    def sample_noise(self):
+        self.linear1.sample_noise()
+        self.linear2.sample_noise()
+        self.linear4_1.sample_noise()
+        self.linear4_2.sample_noise()
+    
+    def remove_noise(self):
+        self.linear1.remove_noise()
+        self.linear2.remove_noise()
+        self.linear4_1.remove_noise()
+        self.linear4_2.remove_noise()
 
 def _elementwise_clip(x, x_min, x_max):
     """Elementwise clipping
@@ -333,8 +439,29 @@ class VQ_PPO(PPO):
                     self.model.embedding_avg = torch.nn.Parameter(embedding_avg, requires_grad=False)
                     self.model.cluster_size = torch.nn.Parameter(cluster_size, requires_grad=False)
                     self.model.to(self.model.device)
+            elif self.model.encoder_type == "bbb":
+                log_priors, log_variational_posteriors = self.model.return_bbb_info()
+                log_prior = 0
+                for i in range(len(log_priors)):
+                    log_prior = log_prior + log_priors[i]
+                log_prior = log_prior/len(log_priors)
+                log_variational_posterior = 0
+                for i in range(len(log_variational_posteriors)):
+                    log_variational_posterior = log_variational_posterior + log_variational_posteriors[i]
+                log_variational_posterior = log_variational_posterior/len(log_variational_posteriors)
+                kl = (log_variational_posterior - log_prior)/len(log_priors)
+
+                loss = loss + kl
+
+                self.model.reset_bbb_info()
 
         return loss
+    
+    def sample_noise(self):
+        self.model.sample_noise()
+    
+    def remove_noise(self):
+        self.model.remove_noise()
 
 class IPPO(IndependentAgent):
     def __init__(self, config, obs_act, map_name, thread_number, model_type="default", model_param={}, update_interval=1024, minibatch_size=256, epochs=4, lr=None, decay_rate=None, load_path=[]):
@@ -349,6 +476,14 @@ class IPPO(IndependentAgent):
             for key in obs_act:
                 self.agents[key].load(load_path[i])
                 i += 1
+    
+    def sample_noise(self):
+        for agent in self.agents.values():
+            agent.sample_noise()
+    
+    def remove_noise(self):
+        for agent in self.agents.values():
+            agent.remove_noise()
 
 
 class PFRLPPOAgent(Agent):
@@ -409,3 +544,9 @@ class PFRLPPOAgent(Agent):
         checkpoint = torch.load(path, map_location=self.device)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    def sample_noise(self):
+        self.agent.sample_noise()
+    
+    def remove_noise(self):
+        self.agent.remove_noise()

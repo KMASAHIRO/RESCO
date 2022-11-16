@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+from .NoisyNet import NoisyLinear
+from .BBB import BayesianLinear
 
 # 方策関数
 class PolicyFunction(torch.nn.Module):
@@ -39,17 +41,32 @@ class PolicyFunction(torch.nn.Module):
             self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
             self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
             self.encoder = self.vq_encoder
-        
+        elif self.encoder_type == "noisy":
+            self.fc_first = NoisyLinear(self.num_states, num_hidden_units)
+            self.encoder = self.fc_encoder
+        elif self.encoder_type == "bbb":
+            self.fc_first = BayesianLinear(self.num_states, num_hidden_units)
+            self.encoder = self.fc_encoder
         
         fc_last_layers = list()
         for i in range(num_traffic_lights):
-            fc_last_layers.append(torch.nn.Linear(num_hidden_units, self.num_actions[i]))
+            if self.encoder_type == "noisy":
+                fc_last_layers.append(NoisyLinear(num_hidden_units, self.num_actions[i]))
+            elif self.encoder_type == "bbb":
+                fc_last_layers.append(BayesianLinear(num_hidden_units, self.num_actions[i]))
+            else:
+                fc_last_layers.append(torch.nn.Linear(num_hidden_units, self.num_actions[i]))
         self.fc_last_layers = torch.nn.ModuleList(fc_last_layers)
 
         fc_layers = list()
         self.num_layers = num_layers
         for i in range(num_layers):
-            fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
+            if self.encoder_type == "noisy":
+                fc_layers.append(NoisyLinear(num_hidden_units, num_hidden_units))
+            elif self.encoder_type == "bbb":
+                fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units))
+            else:
+                fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
         self.fc_layers = torch.nn.ModuleList(fc_layers)
 
         self.relu = torch.nn.ReLU()
@@ -114,8 +131,35 @@ class PolicyFunction(torch.nn.Module):
         
         if self.encoder_type == "vq" and self.training:
             return last_outputs, beta_loss, vector, embedding_idx
+        elif self.encoder_type == "bbb" and self.training:
+            log_prior = self.fc_first.log_prior
+            for layer in self.fc_layers:
+                log_prior = log_prior + layer.log_prior
+            for layer in self.fc_last_layers:
+                log_prior = log_prior + layer.log_prior
+
+            log_variational_posterior = self.fc_first.log_variational_posterior
+            for layer in self.fc_layers:
+                log_variational_posterior = log_variational_posterior + layer.log_variational_posterior
+            for layer in self.fc_last_layers:
+                log_variational_posterior = log_variational_posterior + layer.log_variational_posterior
+            return last_outputs, log_prior, log_variational_posterior
         else:
             return last_outputs
+    
+    def sample_noise(self):
+        self.fc_first.sample_noise()
+        for layer in self.fc_layers:
+            layer.sample_noise()
+        for layer in self.fc_last_layers:
+            layer.sample_noise()
+    
+    def remove_noise(self):
+        self.fc_first.remove_noise()
+        for layer in self.fc_layers:
+            layer.remove_noise()
+        for layer in self.fc_last_layers:
+            layer.remove_noise()
 
 # 損失関数(期待収益のマイナス符号)
 class PolicyGradientLossWithREINFORCE(torch.nn.Module):
@@ -183,6 +227,9 @@ class Agent():
                 for i in range(embedding_num):
                     self.middle_outputs.append(list())
                 self.beta_loss_history = list()
+            elif self.encoder_type == "bbb":
+                self.log_priors = list()
+                self.log_variational_posteriors = list()
             self.policy_function.train()
             self.loss_f = PolicyGradientLossWithREINFORCE()
             param_optimizer = list(self.policy_function.named_parameters())
@@ -202,6 +249,8 @@ class Agent():
         if self.is_train:
             if self.encoder_type == "vq":
                 actions_prob, beta_loss, vector, embedding_idx = self.policy_function(obs)
+            elif self.encoder_type == "bbb":
+                actions_prob, log_prior, log_variational_posterior = self.policy_function(obs)
             else:
                 actions_prob = self.policy_function(obs)
         else:
@@ -226,6 +275,9 @@ class Agent():
             if self.encoder_type == "vq":
                 self.middle_outputs[embedding_idx].append(vector)
                 self.beta_loss_history.append(beta_loss)
+            elif self.encoder_type == "bbb":
+                self.log_priors.append(log_prior)
+                self.log_variational_posteriors.append(log_variational_posterior)
         
         return chosen_actions
 
@@ -273,6 +325,18 @@ class Agent():
                     self.middle_outputs.append(list())
         
                 loss = self.loss_f(self.actions_prob_history, self.rewards_history, self.beta, self.beta_loss_history)
+        elif self.encoder_type == "bbb":
+            log_prior = 0
+            for i in range(len(self.log_priors)):
+                log_prior = log_prior + self.log_priors[i]
+            log_prior = log_prior/len(self.log_priors)
+            log_variational_posterior = 0
+            for i in range(len(self.log_variational_posteriors)):
+                log_variational_posterior = log_variational_posterior + self.log_variational_posteriors[i]
+            log_variational_posterior = log_variational_posterior/len(self.log_variational_posteriors)
+            kl = (log_variational_posterior - log_prior)/len(self.log_priors)
+            
+            loss = self.loss_f(self.actions_prob_history, self.rewards_history) + kl
         else:
             loss = self.loss_f(self.actions_prob_history, self.rewards_history)
         self.optimizer.zero_grad()
@@ -293,9 +357,18 @@ class Agent():
             if self.encoder_type == "vq":
                 self.embedding_loss_history = list()
                 self.beta_loss_history = list()
+            elif self.encoder_type == "bbb":
+                self.log_priors = list()
+                self.log_variational_posteriors = list()
 
     def save_model(self, path):
         self.policy_function.to("cpu")
         torch.save(self.policy_function.state_dict(), path)
         
         self.policy_function.to(self.device)
+    
+    def sample_noise(self):
+        self.policy_function.sample_noise()
+    
+    def remove_noise(self):
+        self.policy_function.remove_noise()

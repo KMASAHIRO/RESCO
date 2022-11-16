@@ -37,7 +37,7 @@ if __name__ == "__main__":
         x = np.arange(-6,7,1)
         y = 1/(1+np.exp(x))
 
-        fig, ax = plt.subplots(nrows=5, ncols=3,sharex=True,sharey=True) 
+        fig, ax = plt.subplots(nrows=5, ncols=3,dpi=140,sharex=True,sharey=True) 
         ax = ax.ravel()
 
         # 最初の5件
@@ -45,7 +45,7 @@ if __name__ == "__main__":
             for j in range(traffic_light_num):
                 y = [actions_data[i][k*traffic_light_num + j] for k in range(steps_per_episode)]
                 ax[i*3].step(list(range(1, steps_per_episode+1)), y, "C" + str(j+1) + "-")
-            ax[i*3].set_title("delay="+str(delay[i]))
+            ax[i*3].set_title("delay="+str(delay[i])[:5])
         
         # delay最小5件
         delay_arg = np.argsort(delay)[:5]
@@ -53,15 +53,15 @@ if __name__ == "__main__":
             for j in range(traffic_light_num):
                 y = [actions_data[delay_arg[i]][k*traffic_light_num + j] for k in range(steps_per_episode)]
                 ax[i*3+1].step(list(range(1, steps_per_episode+1)), y, "C" + str(j+1) + "-")
-            ax[i*3+1].set_title("delay="+str(delay[delay_arg[i]]))
+            ax[i*3+1].set_title("delay="+str(delay[delay_arg[i]])[:5])
         
         # 最後の5件
         for i in range(5):
             for j in range(traffic_light_num):
                 y = [actions_data[-5+i][k*traffic_light_num + j] for k in range(steps_per_episode)]
                 ax[i*3+2].step(list(range(1, steps_per_episode+1)), y, "C" + str(j+1) + "-")
-            ax[i*3+2].set_title("delay="+str(delay[-5+i]))
+            ax[i*3+2].set_title("delay="+str(delay[-5+i])[:5])
 
         plt.suptitle('episode内のaction')
         plt.tight_layout()
-        plt.savefig("actions_steps_" + dir_name + ".png")
+        plt.savefig(fig_dir + "actions_steps_" + dir_name + ".png", dpi=140)
