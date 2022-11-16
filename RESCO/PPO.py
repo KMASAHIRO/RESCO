@@ -63,7 +63,7 @@ class OriginalModel(torch.nn.Module):
             self.fc_first = NoisyLinear(self.num_states, num_hidden_units, device=self.device)
             self.encoder = self.fc_encoder
         elif self.encoder_type == "bbb":
-            self.fc_first = BayesianLinear(self.num_states, num_hidden_units)
+            self.fc_first = BayesianLinear(self.num_states, num_hidden_units, device=self.device)
             self.encoder = self.fc_encoder
             self.log_priors = list()
             self.log_variational_posteriors = list()
@@ -72,8 +72,8 @@ class OriginalModel(torch.nn.Module):
             self.fc_actions_layer = NoisyLinear(num_hidden_units, self.num_actions, device=self.device)
             self.fc_value_layer = NoisyLinear(num_hidden_units, 1, device=self.device)
         elif self.encoder_type == "bbb":
-            self.fc_actions_layer = BayesianLinear(num_hidden_units, self.num_actions)
-            self.fc_value_layer = BayesianLinear(num_hidden_units, 1)
+            self.fc_actions_layer = BayesianLinear(num_hidden_units, self.num_actions, device=self.device)
+            self.fc_value_layer = BayesianLinear(num_hidden_units, 1, device=self.device)
         else:
             self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
             self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
@@ -84,7 +84,7 @@ class OriginalModel(torch.nn.Module):
             if self.encoder_type == "noisy":
                 fc_layers.append(NoisyLinear(num_hidden_units, num_hidden_units, device=self.device))
             elif self.encoder_type == "bbb":
-                fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units))
+                fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units, device=self.device))
             else:
                 fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
         self.fc_layers = torch.nn.ModuleList(fc_layers)
@@ -249,10 +249,10 @@ class DefaultModel(torch.nn.Module):
             self.linear4_1 = NoisyLinear(64, act_space, device=self.device)
             self.linear4_2 = NoisyLinear(64, 1, device=self.device)
         elif self.encoder_type == "bbb":
-            self.linear1 = BayesianLinear(h*w*64, 64)
-            self.linear2 = BayesianLinear(64, 64)
-            self.linear4_1 = BayesianLinear(64, act_space)
-            self.linear4_2 = BayesianLinear(64, 1)
+            self.linear1 = BayesianLinear(h*w*64, 64, device=self.device)
+            self.linear2 = BayesianLinear(64, 64, device=self.device)
+            self.linear4_1 = BayesianLinear(64, act_space, device=self.device)
+            self.linear4_2 = BayesianLinear(64, 1, device=self.device)
         else:
             self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
             self.linear2 = lecun_init(nn.Linear(64, 64))

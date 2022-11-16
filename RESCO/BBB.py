@@ -6,10 +6,11 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 class Gaussian(object):
-    def __init__(self, mu, rho):
+    def __init__(self, mu, rho, device):
         super().__init__()
         self.mu = mu
         self.rho = rho
+        self.device = device
         self.normal = torch.distributions.Normal(0,1)
     
     @property
@@ -17,7 +18,7 @@ class Gaussian(object):
         return torch.log1p(torch.exp(self.rho))
     
     def sample(self):
-        epsilon = self.normal.sample(self.rho.size()).to(DEVICE)
+        epsilon = self.normal.sample(self.rho.size()).to(self.device)
         return self.mu + self.sigma * epsilon
     
     def log_prob(self, input):
@@ -40,18 +41,18 @@ class ScaleMixtureGaussian(object):
         return (torch.log(self.pi * prob1 + (1-self.pi) * prob2)).sum()
 
 class BayesianLinear(nn.Module):
-    def __init__(self, in_features, out_features):
+    def __init__(self, in_features, out_features, device):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         # Weight parameters
         self.weight_mu = nn.Parameter(torch.Tensor(out_features, in_features).uniform_(-0.2, 0.2))
         self.weight_rho = nn.Parameter(torch.Tensor(out_features, in_features).uniform_(-5,-4))
-        self.weight = Gaussian(self.weight_mu, self.weight_rho)
+        self.weight = Gaussian(self.weight_mu, self.weight_rho, device)
         # Bias parameters
         self.bias_mu = nn.Parameter(torch.Tensor(out_features).uniform_(-0.2, 0.2))
         self.bias_rho = nn.Parameter(torch.Tensor(out_features).uniform_(-5,-4))
-        self.bias = Gaussian(self.bias_mu, self.bias_rho)
+        self.bias = Gaussian(self.bias_mu, self.bias_rho, device)
         # Prior distributions
         PI = 0.5
         SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
