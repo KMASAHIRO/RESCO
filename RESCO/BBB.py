@@ -58,8 +58,8 @@ class BayesianLinear(nn.Module):
         PI = 0.5
         #SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
         #SIGMA_2 = torch.cuda.FloatTensor([math.exp(-6)])
-        SIGMA_1 = torch.Tensor([math.exp(-0)], device=device)
-        SIGMA_2 = torch.Tensor([math.exp(-6)], device=device)
+        SIGMA_1 = torch.tensor([math.exp(-0)], device=device)
+        SIGMA_2 = torch.tensor([math.exp(-6)], device=device)
         self.weight_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2, device)
         self.bias_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2, device)
         self.log_prior = 0
