@@ -233,7 +233,8 @@ def train_PPO(
         actions_data = list()
     
     play_steps = 0
-    agent.sample_noise()
+    if encoder_type == "noisy":
+        agent.sample_noise()
     for _ in range(episodes):
         actions_data_episode = list()
         obs = env.reset()
@@ -250,7 +251,7 @@ def train_PPO(
             agent.observe(obs, rew, done, info)
 
             play_steps += 1
-            if play_steps % update_interval == 0:
+            if encoder_type == "noisy" and play_steps % update_interval == 0:
                 agent.sample_noise()
             
             if save_actions:
