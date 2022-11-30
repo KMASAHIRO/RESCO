@@ -42,7 +42,7 @@ class ScaleMixtureGaussian(object):
         return (torch.log(self.pi * prob1 + (1-self.pi) * prob2)).sum()
 
 class BayesianLinear(nn.Module):
-    def __init__(self, in_features, out_features, device):
+    def __init__(self, in_features, out_features, device, pi=0.5):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -55,7 +55,7 @@ class BayesianLinear(nn.Module):
         self.bias_rho = nn.Parameter(torch.Tensor(out_features).uniform_(-5,-4))
         self.bias = Gaussian(self.bias_mu, self.bias_rho, device)
         # Prior distributions
-        PI = 0.5
+        PI = pi
         #SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
         #SIGMA_2 = torch.cuda.FloatTensor([math.exp(-6)])
         SIGMA_1 = torch.tensor([math.exp(-0)], device=device)

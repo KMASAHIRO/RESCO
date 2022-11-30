@@ -180,7 +180,8 @@ def train_PPO(
     num_hidden_units=512, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     update_interval=1024, minibatch_size=256, epochs=4, embedding_no_train=False, 
-    embedding_start_train=None, model_type="original", log_dir="./", env_base="../RESCO/environments/", 
+    embedding_start_train=None, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, 
+    model_type="original", log_dir="./", env_base="../RESCO/environments/", 
     reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False
     ):
 
@@ -215,7 +216,8 @@ def train_PPO(
             "temperature": temperature, "noise": noise, "encoder_type": encoder_type, 
             "embedding_type": embedding_type, "embedding_no_train": embedding_no_train, 
             "embedding_num": embedding_num, "embedding_decay": embedding_decay, 
-            "beta": beta, "eps": eps, "device": device
+            "beta": beta, "eps": eps, "noisy_layer_num": noisy_layer_num, 
+            "bbb_layer_num": bbb_layer_num, "bbb_pi": bbb_pi, "device": device
         }
 
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param)
@@ -224,7 +226,9 @@ def train_PPO(
             "num_layers": num_layers, "num_hidden_units": num_hidden_units, "temperature": temperature,
             "noise": noise, "encoder_type": encoder_type, "embedding_type": embedding_type, 
             "embedding_no_train": embedding_no_train, "embedding_num": embedding_num, 
-            "embedding_decay": embedding_decay, "beta": beta, "eps": eps, "device": device
+            "embedding_decay": embedding_decay, "beta": beta, "eps": eps, 
+            "noisy_layer_num": noisy_layer_num, "bbb_layer_num": bbb_layer_num, 
+            "bbb_pi": bbb_pi, "device": device
         }
         
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, lr, decay_rate)
