@@ -38,6 +38,8 @@ if __name__ == "__main__":
         learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
     if train_config.get("param", "epochs"):
         learn_options.extend(["--epochs", train_config.get("param", "epochs")])
+    if train_config.get("param", "entropy_coef"):
+        learn_options.extend(["--entropy_coef", train_config.get("param", "entropy_coef")])
     
     map_config = map_configs[map_name]
     agent_config = agent_configs[config_agent_name]
@@ -47,6 +49,8 @@ if __name__ == "__main__":
     for sec in sections:
         if sec != "DEFAULT" and sec != "param":
             experiments[sec] = dict(train_config.items(sec))
+            if "device" not in experiments[sec].keys():
+                experiments[sec]["device"] = device
 
     for dir_name in experiments.keys():
         subprocess.run(["mkdir", dir_name])
