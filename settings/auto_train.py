@@ -32,14 +32,17 @@ if __name__ == "__main__":
     device = train_config.get("DEFAULT", "device")
 
     learn_options = list()
-    if train_config.get("param", "update_interval"):
-        learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
-    if train_config.get("param", "minibatch_size"):
-        learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
-    if train_config.get("param", "epochs"):
-        learn_options.extend(["--epochs", train_config.get("param", "epochs")])
-    if train_config.get("param", "entropy_coef"):
-        learn_options.extend(["--entropy_coef", train_config.get("param", "entropy_coef")])
+    try:
+        if train_config.get("param", "update_interval"):
+            learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
+        if train_config.get("param", "minibatch_size"):
+            learn_options.extend(["--minibatch_size", train_config.get("param", "minibatch_size")])
+        if train_config.get("param", "epochs"):
+            learn_options.extend(["--epochs", train_config.get("param", "epochs")])
+        if train_config.get("param", "entropy_coef"):
+            learn_options.extend(["--entropy_coef", train_config.get("param", "entropy_coef")])
+    except:
+        pass
     
     map_config = map_configs[map_name]
     agent_config = agent_configs[config_agent_name]
