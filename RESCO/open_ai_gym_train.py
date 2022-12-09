@@ -12,9 +12,9 @@ from .agent_config import agent_configs
 # 学習させる関数
 def train_agent_gym(
     env_name, model_save_path=None, episode_per_learn=10, episodes=1400,  max_steps=200, num_layers=1, 
-    num_hidden_units=128, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
+    num_hidden_units=128, lr=0.01, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
-    embedding_no_train=False, embedding_start_train=None, gamma=1.0, log_dir="./", learn_curve_csv=None, 
+    embedding_no_train=False, embedding_start_train=None, gamma=0.99, log_dir="./", learn_curve_csv=None, 
     save_actions=False, device="cpu", gui=False):
     
     env = gym.make(env_name)
@@ -65,13 +65,6 @@ def train_agent_gym(
                 actions_data_episode.extend(chosen_actions)
             
             obs, reward, done, info = env.step(action)
-            if env_name == "MountainCar-v0":
-                if obs[0] >= 0.5:
-                    reward = 10
-                elif obs[0] > -0.4:
-                    reward = (1.0 + obs[0])**2
-                else:
-                    reward = 0.0
             
             if gui:
                 env.render()
@@ -89,8 +82,7 @@ def train_agent_gym(
                 R = 0
                 for k in range(len(episode_reward)):
                     R = episode_reward[-(k+1)] + gamma*R
-                for k in range(len(episode_reward)):
-                    episode_reward[k] = R
+                    episode_reward[-(k+1)] = R
                 agent.set_rewards(episode_reward)
                 break
 
@@ -132,10 +124,10 @@ def train_agent_gym(
 # PPOの学習
 def train_PPO_gym(
     env_name, episode_per_learn=10, episodes=1400,  max_steps=200, num_layers=1, 
-    num_hidden_units=128, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
+    num_hidden_units=128, lr=0.01, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     update_interval=1024, minibatch_size=256, epochs=4, embedding_no_train=False, embedding_start_train=None, 
-    gamma=1.0, log_dir="./", learn_curve_csv=None, 
+    gamma=0.99, log_dir="./", learn_curve_csv=None, 
     model_type="original", save_actions=False, device="cpu", gui=False
     ):
 
