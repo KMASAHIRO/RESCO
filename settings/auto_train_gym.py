@@ -55,7 +55,7 @@ if __name__ == "__main__":
             "--save_actions", "--device", device
             ]
         
-        #python_cmd.extend(learn_options)
+        python_cmd.extend(learn_options)
         
         for op,val in experiments[dir_name].items():
             if val == "True":
