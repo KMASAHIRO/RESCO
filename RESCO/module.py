@@ -9,18 +9,21 @@ class PolicyFunction(torch.nn.Module):
         self, num_states, num_traffic_lights, num_actions, num_layers=1, 
         num_hidden_units=128, temperature=1.0, noise=0.0, encoder_type="fc", 
         embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, 
-        device="cpu"):
+        noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, device="cpu"):
         
         super().__init__()
         self.num_states = num_states
         self.num_traffic_lights = num_traffic_lights
         self.num_actions = num_actions
+        self.num_layers = num_layers
         self.temperature = temperature
         self.noise = noise
         self.encoder_type = encoder_type
         self.embedding_num = embedding_num
         self.embedding_decay = embedding_decay
         self.eps = eps
+        self.noisy_layer_num = noisy_layer_num
+        self.bbb_layer_num = bbb_layer_num
         self.device = torch.device(device)
 
         if self.encoder_type == "fc":
@@ -42,29 +45,40 @@ class PolicyFunction(torch.nn.Module):
             self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
             self.encoder = self.vq_encoder
         elif self.encoder_type == "noisy":
-            self.fc_first = NoisyLinear(self.num_states, num_hidden_units)
+            if self.noisy_layer_num >= 2+self.num_layers:
+                self.fc_first = NoisyLinear(self.num_states, num_hidden_units, device=self.device)
+            else:
+                self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
             self.encoder = self.fc_encoder
         elif self.encoder_type == "bbb":
-            self.fc_first = BayesianLinear(self.num_states, num_hidden_units)
+            if self.bbb_layer_num >= 2+self.num_layers:
+                self.fc_first = BayesianLinear(self.num_states, num_hidden_units, device=self.device, pi=bbb_pi)
+            else:
+                self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
             self.encoder = self.fc_encoder
         
         fc_last_layers = list()
         for i in range(num_traffic_lights):
-            if self.encoder_type == "noisy":
-                fc_last_layers.append(NoisyLinear(num_hidden_units, self.num_actions[i]))
-            elif self.encoder_type == "bbb":
-                fc_last_layers.append(BayesianLinear(num_hidden_units, self.num_actions[i]))
+            if self.encoder_type == "noisy" and self.noisy_layer_num >= 1:
+                fc_last_layers.append(NoisyLinear(num_hidden_units, self.num_actions[i], device=self.device))
+            elif self.encoder_type == "bbb" and self.bbb_layer_num >= 1:
+                fc_last_layers.append(BayesianLinear(num_hidden_units, self.num_actions[i], device=self.device, pi=bbb_pi))
             else:
                 fc_last_layers.append(torch.nn.Linear(num_hidden_units, self.num_actions[i]))
         self.fc_last_layers = torch.nn.ModuleList(fc_last_layers)
 
         fc_layers = list()
-        self.num_layers = num_layers
         for i in range(num_layers):
             if self.encoder_type == "noisy":
-                fc_layers.append(NoisyLinear(num_hidden_units, num_hidden_units))
+                if self.noisy_layer_num >= 2+i:
+                    fc_layers.append(NoisyLinear(num_hidden_units, num_hidden_units, device=self.device))
+                else:
+                    fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
             elif self.encoder_type == "bbb":
-                fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units))
+                if self.bbb_layer_num >= 2+i:
+                    fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi))
+                else:
+                    fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
             else:
                 fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
         self.fc_layers = torch.nn.ModuleList(fc_layers)
@@ -132,34 +146,46 @@ class PolicyFunction(torch.nn.Module):
         if self.encoder_type == "vq" and self.training:
             return last_outputs, beta_loss, vector, embedding_idx
         elif self.encoder_type == "bbb" and self.training:
-            log_prior = self.fc_first.log_prior
-            for layer in self.fc_layers:
-                log_prior = log_prior + layer.log_prior
-            for layer in self.fc_last_layers:
-                log_prior = log_prior + layer.log_prior
-
-            log_variational_posterior = self.fc_first.log_variational_posterior
-            for layer in self.fc_layers:
-                log_variational_posterior = log_variational_posterior + layer.log_variational_posterior
-            for layer in self.fc_last_layers:
-                log_variational_posterior = log_variational_posterior + layer.log_variational_posterior
+            log_prior = 0
+            log_variational_posterior = 0
+            if self.bbb_layer_num >= 1:
+                for layer in self.fc_last_layers:
+                    log_prior = log_prior + layer.log_prior
+                for layer in self.fc_last_layers:
+                    log_variational_posterior = log_variational_posterior + layer.log_variational_posterior
+                        
+            for i in range(self.num_layers):
+                if self.bbb_layer_num >= 2+i:
+                    log_prior = log_prior + self.fc_layers[i].log_prior
+                    log_variational_posterior = log_variational_posterior + self.fc_layers[i].log_variational_posterior
+            
+            if self.bbb_layer_num >= 2+self.num_layers:
+                log_prior = log_prior + self.fc_first.log_prior
+                log_variational_posterior = log_variational_posterior + self.fc_first.log_variational_posterior
+            
             return last_outputs, log_prior, log_variational_posterior
         else:
             return last_outputs
     
     def sample_noise(self):
-        self.fc_first.sample_noise()
-        for layer in self.fc_layers:
-            layer.sample_noise()
-        for layer in self.fc_last_layers:
-            layer.sample_noise()
+        if self.noisy_layer_num >= 2+self.num_layers:
+            self.fc_first.sample_noise()
+        for i in range(self.num_layers):
+            if self.noisy_layer_num >= 2+i:
+                self.fc_layers[i].sample_noise()
+        if self.noisy_layer_num >= 1:
+            for layer in self.fc_last_layers:
+                layer.sample_noise()
     
     def remove_noise(self):
-        self.fc_first.remove_noise()
-        for layer in self.fc_layers:
-            layer.remove_noise()
-        for layer in self.fc_last_layers:
-            layer.remove_noise()
+        if self.noisy_layer_num >= 2+self.num_layers:
+            self.fc_first.remove_noise()
+        for i in range(self.num_layers):
+            if self.noisy_layer_num >= 2+i:
+                self.fc_layers[i].remove_noise()
+        if self.noisy_layer_num >= 1:
+            for layer in self.fc_last_layers:
+                layer.remove_noise()
 
 # 損失関数(期待収益のマイナス符号)
 class PolicyGradientLossWithREINFORCE(torch.nn.Module):
@@ -191,7 +217,8 @@ class Agent():
     def __init__(
         self, num_states, num_traffic_lights, num_actions, num_layers, num_hidden_units, 
         temperature, noise, encoder_type, lr, decay_rate, embedding_type, embedding_num, 
-        embedding_decay, eps, beta, embedding_no_train=False, embedding_start_train=None, 
+        embedding_decay, eps, noisy_layer_num, bbb_layer_num, bbb_pi, beta, 
+        embedding_no_train=False, embedding_start_train=None, 
         is_train=True, device="cpu", model_path=None
         ):
         
@@ -213,7 +240,7 @@ class Agent():
         self.policy_function = PolicyFunction(
             self.num_states, self.num_traffic_lights, self.num_actions, num_layers, 
             num_hidden_units, temperature, noise, encoder_type, embedding_type, embedding_num, 
-            embedding_decay, eps, device)
+            embedding_decay, eps, noisy_layer_num, bbb_layer_num, bbb_pi, device)
         self.policy_function.to(self.device)
 
         if model_path:
@@ -334,7 +361,7 @@ class Agent():
             for i in range(len(self.log_variational_posteriors)):
                 log_variational_posterior = log_variational_posterior + self.log_variational_posteriors[i]
             log_variational_posterior = log_variational_posterior/len(self.log_variational_posteriors)
-            kl = (log_variational_posterior - log_prior)/len(self.log_priors)
+            kl = (log_variational_posterior - log_prior)/1
             
             loss = self.loss_f(self.actions_prob_history, self.rewards_history) + kl
         else:

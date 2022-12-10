@@ -13,7 +13,8 @@ from .agent_config import agent_configs
 def train_agent_gym(
     env_name, model_save_path=None, episode_per_learn=10, episodes=1400,  max_steps=200, num_layers=1, 
     num_hidden_units=128, lr=0.01, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
-    lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
+    lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, 
+    noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, beta=0.25, 
     embedding_no_train=False, embedding_start_train=None, gamma=0.99, log_dir="./", learn_curve_csv=None, 
     save_actions=False, device="cpu", gui=False):
     
@@ -27,7 +28,8 @@ def train_agent_gym(
         num_states=num_states, num_traffic_lights=1, num_actions=num_actions, 
         num_layers=num_layers, num_hidden_units=num_hidden_units, temperature=temperature, noise=noise, 
         encoder_type=encoder_type, lr=lr, decay_rate=decay_rate, embedding_type=embedding_type, 
-        embedding_num=embedding_num, embedding_decay=embedding_decay, eps=eps, beta=beta, 
+        embedding_num=embedding_num, embedding_decay=embedding_decay, eps=eps, 
+        noisy_layer_num=noisy_layer_num, bbb_layer_num=bbb_layer_num, bbb_pi=bbb_pi, beta=beta, 
         embedding_no_train=embedding_no_train, embedding_start_train=embedding_start_train, 
         is_train=True, device=device)
 
@@ -38,6 +40,9 @@ def train_agent_gym(
 
     if save_actions:
         actions_data = list()
+    
+    if encoder_type == "noisy":
+        agent.sample_noise()
 
     for i in range(episodes):
         if save_actions:
@@ -91,6 +96,9 @@ def train_agent_gym(
             loss_list.append(loss)
             agent.reset_batch()
 
+            if encoder_type == "noisy":
+                agent.sample_noise()
+
             current_reward_sum = np.sum(current_reward)
             if current_reward_sum > best_reward_sum:
                 best_reward_sum = current_reward_sum
@@ -125,8 +133,9 @@ def train_agent_gym(
 def train_PPO_gym(
     env_name, episode_per_learn=10, episodes=1400,  max_steps=200, num_layers=1, 
     num_hidden_units=128, lr=0.01, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
-    lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
-    update_interval=1024, minibatch_size=256, epochs=4, embedding_no_train=False, embedding_start_train=None, 
+    lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, 
+    noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, beta=0.25, 
+    update_interval=1024, minibatch_size=256, epochs=4, entropy_coef=0.001, embedding_no_train=False, embedding_start_train=None, 
     gamma=0.99, log_dir="./", learn_curve_csv=None, 
     model_type="original", save_actions=False, device="cpu", gui=False
     ):
@@ -151,19 +160,22 @@ def train_PPO_gym(
             "temperature": temperature, "noise": noise, "encoder_type": encoder_type, 
             "embedding_type": embedding_type, "embedding_no_train": embedding_no_train, 
             "embedding_num": embedding_num, "embedding_decay": embedding_decay, 
-            "beta": beta, "eps": eps, "device": device
+            "beta": beta, "eps": eps, "noisy_layer_num": noisy_layer_num, 
+            "bbb_layer_num": bbb_layer_num, "bbb_pi": bbb_pi, "device": device
         }
 
-        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param)
+        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, entropy_coef)
     elif model_type == "original":
         model_param = {
             "num_layers": num_layers, "num_hidden_units": num_hidden_units, "temperature": temperature,
             "noise": noise, "encoder_type": encoder_type, "embedding_type": embedding_type, 
             "embedding_no_train": embedding_no_train, "embedding_num": embedding_num, 
-            "embedding_decay": embedding_decay, "beta": beta, "eps": eps, "device": device
+            "embedding_decay": embedding_decay, "beta": beta, "eps": eps, 
+            "noisy_layer_num": noisy_layer_num, "bbb_layer_num": bbb_layer_num, 
+            "bbb_pi": bbb_pi,"device": device
         }
         
-        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, lr, decay_rate)
+        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, entropy_coef, lr, decay_rate)
     
     best_reward_sum = float("-inf")
     steps_list = list()
@@ -171,6 +183,9 @@ def train_PPO_gym(
     if save_actions:
         actions_data = list()
 
+    play_steps = 0
+    if encoder_type == "noisy":
+        agent.sample_noise()
     for i in range(episodes):
         if save_actions:
             actions_data_episode = list()
@@ -199,14 +214,6 @@ def train_PPO_gym(
             obs, reward, done, info = env.step(action)
             episode_data.append([obs, reward, done, info])
             
-            if env_name == "MountainCar-v0":
-                if obs[0] >= 0.5:
-                    reward = 10
-                elif obs[0] > -0.4:
-                    reward = (1.0 + obs[0])**2
-                else:
-                    reward = 0.0
-            
             if gui:
                 env.render()
             
@@ -220,9 +227,17 @@ def train_PPO_gym(
                 R = 0
                 for k in range(len(episode_data)):
                     R = episode_data[-(k+1)][1] + gamma*R
+                    episode_data[-(k+1)][1] = R
+                
+                length = len(episode_data)
+                for k in range(max_steps - length):
+                    episode_data.append([episode_data[k%length][0], episode_data[k%length][1], episode_data[k%length][2], episode_data[k%length][3]])
                 
                 for k in range(len(episode_data)):
                     agent.observe({"main":episode_data[k][0]}, {"main":R}, episode_data[k][2], episode_data[k][3])
+                    play_steps += 1
+                    if encoder_type == "noisy" and play_steps % update_interval == 0:
+                        agent.sample_noise()
 
                 break
         

@@ -25,8 +25,12 @@ if __name__=="__main__":
     parser.add_argument("--update_interval", type=int, default=1024)
     parser.add_argument("--minibatch_size", type=int, default=256)
     parser.add_argument("--epochs", type=int, default=4)
+    parser.add_argument("--entropy_coef", type=float, default=0.001)
     parser.add_argument("--embedding_no_train", action="store_true")
     parser.add_argument("--embedding_start_train", type=int, default=0)
+    parser.add_argument("--noisy_layer_num", type=int, default=4)
+    parser.add_argument("--bbb_layer_num", type=int, default=4)
+    parser.add_argument("--bbb_pi", type=float, default=0.5)
     parser.add_argument("--log_dir", type=str, default="./")
     parser.add_argument("--learn_curve_csv", type=str, default="")
     parser.add_argument("--save_actions", action="store_true")
@@ -77,8 +81,11 @@ if __name__=="__main__":
                 num_hidden_units=args.num_hidden_units, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
+                update_interval=args.update_interval, minibatch_size=args.minibatch_size, epochs=args.epochs, 
+                entropy_coef = args.entropy_coef,
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
-                log_dir=args.log_dir, learn_curve_csv=learn_curve_csv,
+                noisy_layer_num=args.noisy_layer_num, bbb_layer_num=args.bbb_layer_num, bbb_pi=args.bbb_pi, 
+                model_type=args.ppo_model_type, log_dir=args.log_dir, learn_curve_csv=learn_curve_csv,
                 save_actions=args.save_actions, device=args.device
                 )
     except Exception as err:

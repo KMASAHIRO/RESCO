@@ -16,7 +16,7 @@ from .BBB import BayesianLinear
 # 方策関数
 class OriginalModel(torch.nn.Module):
     def __init__(
-        self, num_states, num_actions, num_layers=1, num_hidden_units=128, 
+        self, num_states, num_actions, num_batches, num_layers=1, num_hidden_units=128, 
         temperature=1.0, noise=0.0, encoder_type="fc", embedding_type="random", 
         embedding_no_train=True, embedding_num=5, embedding_decay=0.99, beta=0.25, 
         eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, device="cpu"):
@@ -24,6 +24,7 @@ class OriginalModel(torch.nn.Module):
         super().__init__()
         self.num_states = num_states
         self.num_actions = num_actions
+        self.num_batches = num_batches
         self.temperature = temperature
         self.num_layers = num_layers
         self.noise = noise
@@ -259,12 +260,13 @@ def lecun_init(layer, gain=1):
 # 先行研究での方策関数
 class DefaultModel(torch.nn.Module):
     def __init__(
-        self, obs_space, act_space, temperature=1.0, noise=0.0, encoder_type=None,
+        self, obs_space, act_space, num_batches, temperature=1.0, noise=0.0, encoder_type=None,
         embedding_type="random", embedding_no_train=True, embedding_num=5, 
         embedding_decay=0.99, beta=0.25, eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, 
         bbb_pi=0.5, device="cpu"):
         
         super().__init__()
+        self.num_batches = num_batches
         self.temperature = temperature
         self.noise = noise
         self.encoder_type = encoder_type
@@ -536,7 +538,7 @@ class VQ_PPO(PPO):
                 for i in range(len(log_variational_posteriors)):
                     log_variational_posterior = log_variational_posterior + log_variational_posteriors[i]
                 log_variational_posterior = log_variational_posterior/len(log_variational_posteriors)
-                kl = (log_variational_posterior - log_prior)/len(log_priors)
+                kl = (log_variational_posterior - log_prior)/self.model.num_batches
 
                 loss = loss + kl
 
@@ -580,6 +582,7 @@ class PFRLPPOAgent(Agent):
         if model_type == "default":
             model_param["obs_space"] = obs_space
             model_param["act_space"] = act_space
+            model_param["num_batches"] = -(-update_interval//minibatch_size)
             self.model = DefaultModel(**model_param)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2.5e-4, eps=1e-5)
         elif model_type == "original":
@@ -588,6 +591,7 @@ class PFRLPPOAgent(Agent):
                 num_states *= dim_num
             model_param["num_states"] = num_states
             model_param["num_actions"] = act_space
+            model_param["num_batches"] = -(-update_interval//minibatch_size)
             
             self.model = OriginalModel(**model_param)
 

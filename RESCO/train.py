@@ -220,7 +220,7 @@ def train_PPO(
             "bbb_layer_num": bbb_layer_num, "bbb_pi": bbb_pi, "device": device
         }
 
-        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param)
+        agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, entropy_coef)
     elif model_type == "original":
         model_param = {
             "num_layers": num_layers, "num_hidden_units": num_hidden_units, "temperature": temperature,
