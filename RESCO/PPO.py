@@ -263,7 +263,7 @@ class DefaultModel(torch.nn.Module):
         self, obs_space, act_space, num_batches, num_hidden_units=64, temperature=1.0, noise=0.0, 
         encoder_type=None, embedding_type="random", embedding_no_train=True, embedding_num=5, 
         embedding_decay=0.99, beta=0.25, eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, 
-        bbb_pi=0.5, device="cpu"):
+        bbb_pi=0.5, no_hidden_layer=False, device="cpu"):
         
         super().__init__()
         self.num_batches = num_batches
@@ -278,6 +278,7 @@ class DefaultModel(torch.nn.Module):
         self.eps = eps
         self.noisy_layer_num = noisy_layer_num
         self.bbb_layer_num = bbb_layer_num
+        self.no_hidden_layer = no_hidden_layer
         self.device = torch.device(device)
 
         def conv2d_size_out(size, kernel_size=2, stride=1):
@@ -293,12 +294,13 @@ class DefaultModel(torch.nn.Module):
                 self.linear1 = NoisyLinear(h*w*num_hidden_units, num_hidden_units, device=self.device)
             else:
                 self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
-
-            if self.noisy_layer_num >= 3:
-                self.linear2 = NoisyLinear(num_hidden_units, num_hidden_units, device=self.device)
-            else:
-                self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             
+            if not self.no_hidden_layer:
+                if self.noisy_layer_num >= 3:
+                    self.linear2 = NoisyLinear(num_hidden_units, num_hidden_units, device=self.device)
+                else:
+                    self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
+
             if self.noisy_layer_num >= 2:
                 self.linear4_1 = NoisyLinear(num_hidden_units, act_space, device=self.device)
             else:
@@ -314,10 +316,11 @@ class DefaultModel(torch.nn.Module):
             else:
                 self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
             
-            if self.bbb_layer_num >= 3:
-                self.linear2 = BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi)
-            else:
-                self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
+            if not self.no_hidden_layer:
+                if self.bbb_layer_num >= 3:
+                    self.linear2 = BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi)
+                else:
+                    self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             
             if self.bbb_layer_num >= 2:
                 self.linear4_1 = BayesianLinear(num_hidden_units, act_space, device=self.device, pi=bbb_pi)
@@ -330,7 +333,8 @@ class DefaultModel(torch.nn.Module):
                 self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         else:
             self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
-            self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
+            if not self.no_hidden_layer:
+                self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
             self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         self.relu = nn.ReLU()
@@ -361,8 +365,9 @@ class DefaultModel(torch.nn.Module):
         x = self.flatten(x)
         x = self.linear1(x)
         x = self.relu(x)
-        x = self.linear2(x)
-        x = self.relu(x)
+        if not self.no_hidden_layer:
+            x = self.linear2(x)
+            x = self.relu(x)
 
         if self.noise != 0.0 and self.training:
             x = x + torch.normal(torch.zeros(x.shape), torch.ones(x.shape)*self.noise).to(self.device)
@@ -395,7 +400,8 @@ class DefaultModel(torch.nn.Module):
                 log_prior = log_prior + self.linear4_1.log_prior
                 log_variational_posterior = log_variational_posterior + self.linear4_1.log_variational_posterior
             
-            if self.bbb_layer_num >= 3:
+            
+            if self.bbb_layer_num >= 3 and not self.no_hidden_layer:
                 log_prior = log_prior + self.linear2.log_prior
                 log_variational_posterior = log_variational_posterior + self.linear2.log_variational_posterior
             
@@ -427,7 +433,7 @@ class DefaultModel(torch.nn.Module):
     def sample_noise(self):
         if self.noisy_layer_num >= 4:
             self.linear1.sample_noise()
-        if self.noisy_layer_num >= 3:
+        if self.noisy_layer_num >= 3 and not self.no_hidden_layer:
             self.linear2.sample_noise()
         if self.noisy_layer_num >= 2:
             self.linear4_1.sample_noise()
@@ -437,7 +443,7 @@ class DefaultModel(torch.nn.Module):
     def remove_noise(self):
         if self.noisy_layer_num >= 4:
             self.linear1.remove_noise()
-        if self.noisy_layer_num >= 3:
+        if self.noisy_layer_num >= 3 and not self.no_hidden_layer:
             self.linear2.remove_noise()
         if self.noisy_layer_num >= 2:
             self.linear4_1.remove_noise()

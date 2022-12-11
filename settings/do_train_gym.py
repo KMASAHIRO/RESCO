@@ -31,6 +31,7 @@ if __name__=="__main__":
     parser.add_argument("--noisy_layer_num", type=int, default=4)
     parser.add_argument("--bbb_layer_num", type=int, default=4)
     parser.add_argument("--bbb_pi", type=float, default=0.5)
+    parser.add_argument("--no_hidden_layer", action="store_true")
     parser.add_argument("--log_dir", type=str, default="./")
     parser.add_argument("--learn_curve_csv", type=str, default="")
     parser.add_argument("--save_actions", action="store_true")
@@ -85,6 +86,7 @@ if __name__=="__main__":
                 entropy_coef = args.entropy_coef,
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
                 noisy_layer_num=args.noisy_layer_num, bbb_layer_num=args.bbb_layer_num, bbb_pi=args.bbb_pi, 
+                no_hidden_layer=args.no_hidden_layer, 
                 model_type=args.ppo_model_type, log_dir=args.log_dir, learn_curve_csv=learn_curve_csv,
                 save_actions=args.save_actions, device=args.device
                 )
