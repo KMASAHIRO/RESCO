@@ -23,6 +23,8 @@ if __name__ == "__main__":
     device = train_config.get("DEFAULT", "device")
     learn_options = list()
 
+    if "no_hidden_layer" in train_config["param"] and train_config["param"]["no_hidden_layer"] == True:
+        learn_options.extend(["--no_hidden_layer"])
     if "update_interval" in train_config["param"]:
         learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
     if "minibatch_size" in train_config["param"]:
