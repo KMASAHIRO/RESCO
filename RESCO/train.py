@@ -213,6 +213,7 @@ def train_PPO(
     
     if model_type == "default":
         model_param = {
+            "num_hidden_units": num_hidden_units, 
             "temperature": temperature, "noise": noise, "encoder_type": encoder_type, 
             "embedding_type": embedding_type, "embedding_no_train": embedding_no_train, 
             "embedding_num": embedding_num, "embedding_decay": embedding_decay, 

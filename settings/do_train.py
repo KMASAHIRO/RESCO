@@ -29,6 +29,7 @@ if __name__=="__main__":
     parser.add_argument("--max_distance", type=int, default=200)
     parser.add_argument("--lights", type=str, default="()")
     parser.add_argument("--warmup", type=int, default=0)
+    parser.add_argument("--num_hidden_units", type=int, default=512)
     parser.add_argument("--lr", type=float, default=3e-5)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--noise", type=float, default=0.0)
@@ -108,7 +109,8 @@ if __name__=="__main__":
                 episode_per_learn=args.episode_per_learn, episodes=args.episodes, step_length=args.step_length, 
                 yellow_length=args.yellow_length, step_ratio=args.step_ratio, end_time=args.end_time, 
                 max_distance=args.max_distance, lights=lights, warmup=args.warmup, num_layers=1, 
-                num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                num_hidden_units=args.num_hidden_units, lr=args.lr, decay_rate=0.01, 
+                temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
@@ -122,7 +124,8 @@ if __name__=="__main__":
                 episodes=args.episodes, step_length=args.step_length, yellow_length=args.yellow_length, 
                 step_ratio=args.step_ratio, start_time=args.start_time, end_time=args.end_time, 
                 max_distance=args.max_distance, lights=lights, warmup=args.warmup, num_layers=1, 
-                num_hidden_units=512, lr=args.lr, decay_rate=0.01, temperature=args.temperature, noise=args.noise, 
+                num_hidden_units=args.num_hidden_units, lr=args.lr, decay_rate=0.01, 
+                temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
                 embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
                 update_interval=args.update_interval, minibatch_size=args.minibatch_size, epochs=args.epochs, 

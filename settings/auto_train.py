@@ -32,6 +32,8 @@ if __name__ == "__main__":
     device = train_config.get("DEFAULT", "device")
 
     learn_options = list()
+    if "num_hidden_units" in train_config["param"]:
+        learn_options.extend(["--num_hidden_units", train_config.get("param", "num_hidden_units")])
     if "update_interval" in train_config["param"]:
         learn_options.extend(["--update_interval", train_config.get("param", "update_interval")])
     if "minibatch_size" in train_config["param"]:

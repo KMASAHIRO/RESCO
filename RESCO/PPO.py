@@ -260,8 +260,8 @@ def lecun_init(layer, gain=1):
 # 先行研究での方策関数
 class DefaultModel(torch.nn.Module):
     def __init__(
-        self, obs_space, act_space, num_batches, temperature=1.0, noise=0.0, encoder_type=None,
-        embedding_type="random", embedding_no_train=True, embedding_num=5, 
+        self, obs_space, act_space, num_batches, num_hidden_units=64, temperature=1.0, noise=0.0, 
+        encoder_type=None, embedding_type="random", embedding_no_train=True, embedding_num=5, 
         embedding_decay=0.99, beta=0.25, eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, 
         bbb_pi=0.5, device="cpu"):
         
@@ -286,62 +286,62 @@ class DefaultModel(torch.nn.Module):
         h = conv2d_size_out(obs_space[1])
         w = conv2d_size_out(obs_space[2])
 
-        self.conv = lecun_init(nn.Conv2d(obs_space[0], 64, kernel_size=(2, 2)))
+        self.conv = lecun_init(nn.Conv2d(obs_space[0], num_hidden_units, kernel_size=(2, 2)))
         self.flatten = nn.Flatten()
         if self.encoder_type == "noisy":
             if self.noisy_layer_num >= 4:
-                self.linear1 = NoisyLinear(h*w*64, 64, device=self.device)
+                self.linear1 = NoisyLinear(h*w*num_hidden_units, num_hidden_units, device=self.device)
             else:
-                self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
+                self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
 
             if self.noisy_layer_num >= 3:
-                self.linear2 = NoisyLinear(64, 64, device=self.device)
+                self.linear2 = NoisyLinear(num_hidden_units, num_hidden_units, device=self.device)
             else:
-                self.linear2 = lecun_init(nn.Linear(64, 64))
+                self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             
             if self.noisy_layer_num >= 2:
-                self.linear4_1 = NoisyLinear(64, act_space, device=self.device)
+                self.linear4_1 = NoisyLinear(num_hidden_units, act_space, device=self.device)
             else:
-                self.linear4_1 = lecun_init(nn.Linear(64, act_space), 1e-2)
+                self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
             
             if self.noisy_layer_num >= 1:
-                self.linear4_2 = NoisyLinear(64, 1, device=self.device)
+                self.linear4_2 = NoisyLinear(num_hidden_units, 1, device=self.device)
             else:
-                self.linear4_2 = lecun_init(nn.Linear(64, 1))
+                self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         elif self.encoder_type == "bbb":
             if self.bbb_layer_num >= 4:
-                self.linear1 = BayesianLinear(h*w*64, 64, device=self.device, pi=bbb_pi)
+                self.linear1 = BayesianLinear(h*w*num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi)
             else:
-                self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
+                self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
             
             if self.bbb_layer_num >= 3:
-                self.linear2 = BayesianLinear(64, 64, device=self.device, pi=bbb_pi)
+                self.linear2 = BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi)
             else:
-                self.linear2 = lecun_init(nn.Linear(64, 64))
+                self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             
             if self.bbb_layer_num >= 2:
-                self.linear4_1 = BayesianLinear(64, act_space, device=self.device, pi=bbb_pi)
+                self.linear4_1 = BayesianLinear(num_hidden_units, act_space, device=self.device, pi=bbb_pi)
             else:
-                self.linear4_1 = lecun_init(nn.Linear(64, act_space), 1e-2)
+                self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
             
             if self.bbb_layer_num >= 1:
-                self.linear4_2 = BayesianLinear(64, 1, device=self.device, pi=bbb_pi)
+                self.linear4_2 = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi)
             else:
-                self.linear4_2 = lecun_init(nn.Linear(64, 1))
+                self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         else:
-            self.linear1 = lecun_init(nn.Linear(h*w*64, 64))
-            self.linear2 = lecun_init(nn.Linear(64, 64))
-            self.linear4_1 = lecun_init(nn.Linear(64, act_space), 1e-2)
-            self.linear4_2 = lecun_init(nn.Linear(64, 1))
+            self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
+            self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
+            self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
+            self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         self.relu = nn.ReLU()
         self.softmax = torch.nn.Softmax(dim=-1)
 
         if self.encoder_type == "vq":
             if self.embedding_type == "random":
-                embedding = torch.randn(self.embedding_num, 64)
+                embedding = torch.randn(self.embedding_num, num_hidden_units)
             elif self.embedding_type == "one_hot":
-                self.embedding_num = 64
-                embedding = torch.nn.functional.one_hot(torch.tensor(range(64)), num_classes=64)
+                self.embedding_num = num_hidden_units
+                embedding = torch.nn.functional.one_hot(torch.tensor(range(num_hidden_units)), num_classes=num_hidden_units)
             
             self.beta_loss_list = list()
             self.middle_outputs = list()
