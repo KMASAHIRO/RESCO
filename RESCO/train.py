@@ -180,7 +180,8 @@ def train_PPO(
     num_hidden_units=512, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     update_interval=1024, minibatch_size=256, epochs=4, entropy_coef=0.001, embedding_no_train=False, 
-    embedding_start_train=None, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, no_hidden_layer=False,
+    embedding_start_train=None, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, bbb_sigma1=-0, 
+    bbb_sigma2=-6, no_hidden_layer=False,
     model_type="original", log_dir="./", env_base="../RESCO/environments/", 
     reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False
     ):
@@ -218,7 +219,8 @@ def train_PPO(
             "embedding_type": embedding_type, "embedding_no_train": embedding_no_train, 
             "embedding_num": embedding_num, "embedding_decay": embedding_decay, 
             "beta": beta, "eps": eps, "noisy_layer_num": noisy_layer_num, 
-            "bbb_layer_num": bbb_layer_num, "bbb_pi": bbb_pi, "no_hidden_layer": no_hidden_layer, 
+            "bbb_layer_num": bbb_layer_num, "bbb_pi": bbb_pi, "bbb_sigma1": bbb_sigma1, 
+            "bbb_sigma2": bbb_sigma2, "no_hidden_layer": no_hidden_layer, 
             "device": device
         }
 
@@ -230,7 +232,8 @@ def train_PPO(
             "embedding_no_train": embedding_no_train, "embedding_num": embedding_num, 
             "embedding_decay": embedding_decay, "beta": beta, "eps": eps, 
             "noisy_layer_num": noisy_layer_num, "bbb_layer_num": bbb_layer_num, 
-            "bbb_pi": bbb_pi, "no_hidden_layer": no_hidden_layer, "device": device
+            "bbb_pi": bbb_pi, "bbb_sigma1": bbb_sigma1, "bbb_sigma2": bbb_sigma2, 
+            "no_hidden_layer": no_hidden_layer, "device": device
         }
         
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, entropy_coef, lr, decay_rate)

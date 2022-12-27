@@ -19,7 +19,8 @@ class OriginalModel(torch.nn.Module):
         self, num_states, num_actions, num_batches, num_layers=1, num_hidden_units=128, 
         temperature=1.0, noise=0.0, encoder_type="fc", embedding_type="random", 
         embedding_no_train=True, embedding_num=5, embedding_decay=0.99, beta=0.25, 
-        eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, device="cpu"):
+        eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, 
+        device="cpu"):
         
         super().__init__()
         self.num_states = num_states
@@ -71,7 +72,7 @@ class OriginalModel(torch.nn.Module):
             self.encoder = self.fc_encoder
         elif self.encoder_type == "bbb":
             if self.bbb_layer_num >= 3+self.num_layers:
-                self.fc_first = BayesianLinear(self.num_states, num_hidden_units, device=self.device, pi=bbb_pi)
+                self.fc_first = BayesianLinear(self.num_states, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
             else:
                 self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
             self.encoder = self.fc_encoder
@@ -90,12 +91,12 @@ class OriginalModel(torch.nn.Module):
                 self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
         elif self.encoder_type == "bbb":
             if self.bbb_layer_num >= 2:
-                self.fc_actions_layer = BayesianLinear(num_hidden_units, self.num_actions, device=self.device, pi=bbb_pi)
+                self.fc_actions_layer = BayesianLinear(num_hidden_units, self.num_actions, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
             else:
                 self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
             
             if self.bbb_layer_num >=1 :
-                self.fc_value_layer = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi)
+                self.fc_value_layer = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
             else:
                 self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
         else:
@@ -111,7 +112,7 @@ class OriginalModel(torch.nn.Module):
                     fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
             elif self.encoder_type == "bbb":
                 if self.bbb_layer_num >= 3+i:
-                    fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi))
+                    fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2))
                 else:
                     fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
             else:
@@ -263,7 +264,7 @@ class DefaultModel(torch.nn.Module):
         self, obs_space, act_space, num_batches, num_hidden_units=64, temperature=1.0, noise=0.0, 
         encoder_type=None, embedding_type="random", embedding_no_train=True, embedding_num=5, 
         embedding_decay=0.99, beta=0.25, eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, 
-        bbb_pi=0.5, no_hidden_layer=False, device="cpu"):
+        bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, no_hidden_layer=False, device="cpu"):
         
         super().__init__()
         self.num_batches = num_batches
@@ -312,23 +313,23 @@ class DefaultModel(torch.nn.Module):
                 self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         elif self.encoder_type == "bbb":
             if self.bbb_layer_num >= 4:
-                self.linear1 = BayesianLinear(h*w*num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi)
+                self.linear1 = BayesianLinear(h*w*num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
             else:
                 self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
             
             if not self.no_hidden_layer:
                 if self.bbb_layer_num >= 3:
-                    self.linear2 = BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi)
+                    self.linear2 = BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
                 else:
                     self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             
             if self.bbb_layer_num >= 2:
-                self.linear4_1 = BayesianLinear(num_hidden_units, act_space, device=self.device, pi=bbb_pi)
+                self.linear4_1 = BayesianLinear(num_hidden_units, act_space, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
             else:
                 self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
             
             if self.bbb_layer_num >= 1:
-                self.linear4_2 = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi)
+                self.linear4_2 = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
             else:
                 self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         else:

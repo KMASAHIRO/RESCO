@@ -42,7 +42,7 @@ class ScaleMixtureGaussian(object):
         return (torch.log(self.pi * prob1 + (1-self.pi) * prob2)).sum()
 
 class BayesianLinear(nn.Module):
-    def __init__(self, in_features, out_features, device, pi=0.5):
+    def __init__(self, in_features, out_features, device, pi=0.5, sigma1=-0, sigma2=-6):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -58,8 +58,8 @@ class BayesianLinear(nn.Module):
         PI = pi
         #SIGMA_1 = torch.cuda.FloatTensor([math.exp(-0)])
         #SIGMA_2 = torch.cuda.FloatTensor([math.exp(-6)])
-        SIGMA_1 = torch.tensor([math.exp(-0)], device=device)
-        SIGMA_2 = torch.tensor([math.exp(-6)], device=device)
+        SIGMA_1 = torch.tensor([math.exp(sigma1)], device=device)
+        SIGMA_2 = torch.tensor([math.exp(sigma2)], device=device)
         self.weight_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2, device)
         self.bias_prior = ScaleMixtureGaussian(PI, SIGMA_1, SIGMA_2, device)
         self.log_prior = 0
