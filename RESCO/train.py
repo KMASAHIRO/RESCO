@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import pandas as pd
 import traci
+import random
 
 from .multi_signal import MultiSignal
 from .module import Agent
@@ -183,9 +184,20 @@ def train_PPO(
     embedding_start_train=None, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, bbb_sigma1=-0, 
     bbb_sigma2=-6, no_hidden_layer=False,
     model_type="original", log_dir="./", env_base="../RESCO/environments/", 
-    reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False
+    reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False, 
+    sumo_no_random=False, python_no_random=False
     ):
 
+    if python_no_random:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms = True
+        torch.backends.cudnn.benchmark = False
+    
     csv_dir = log_dir + run_name + '-tr' + str(trial) + '-' + map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__ + "/"
 
     env = MultiSignal(
@@ -194,7 +206,7 @@ def train_PPO(
         route=route_file, step_length=step_length, yellow_length=yellow_length, 
         step_ratio=step_ratio, end_time=end_time, max_distance=max_distance, 
         lights=lights, gui=False, log_dir=log_dir, libsumo=libsumo, 
-        warmup=warmup, port=port)
+        warmup=warmup, port=port, sumo_no_random=sumo_no_random)
 
     traffic_light_ids = env.all_ts_ids
 

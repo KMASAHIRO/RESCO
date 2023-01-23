@@ -14,7 +14,7 @@ from .traffic_signal import Signal
 class MultiSignal(gym.Env):
     def __init__(self, run_name, map_name, net, state_fn, reward_fn, route=None, gui=False, end_time=3600,
                  step_length=10, yellow_length=4, step_ratio=1, max_distance=200, lights=(), log_dir='/', libsumo=False,
-                 warmup=0, port=None):
+                 warmup=0, port=None, sumo_no_random=False):
         self.libsumo = libsumo
         print(map_name, net, state_fn.__name__, reward_fn.__name__)
         self.log_dir = log_dir
@@ -26,6 +26,7 @@ class MultiSignal(gym.Env):
         self.max_distance = max_distance
         self.warmup = warmup
         self.port = port
+        self.sumo_no_random = sumo_no_random
 
         self.end_time = end_time
         self.step_length = step_length
@@ -130,11 +131,24 @@ class MultiSignal(gym.Env):
             self.sumo_cmd += ['-n', self.net, '-r', self.route + '_'+str(self.run)+'.rou.xml']
         else:
             self.sumo_cmd += ['-c', self.net]
-        self.sumo_cmd += ['--random', '--time-to-teleport', '-1', '--tripinfo-output',
-                          self.log_dir + self.connection_name + os.sep + 'tripinfo_' + str(self.run) + '.xml',
-                          '--tripinfo-output.write-unfinished',
-                          '--no-step-log', 'True',
-                          '--no-warnings', 'True']
+        
+        if self.sumo_no_random:
+            self.sumo_cmd += [
+                '--time-to-teleport', '-1', '--tripinfo-output',
+                self.log_dir + self.connection_name + os.sep + 'tripinfo_' + str(self.run) + '.xml',
+                '--tripinfo-output.write-unfinished',
+                '--no-step-log', 'True',
+                '--no-warnings', 'True'
+                ]
+        else:
+            self.sumo_cmd += [
+                '--random', '--time-to-teleport', '-1', '--tripinfo-output',
+                self.log_dir + self.connection_name + os.sep + 'tripinfo_' + str(self.run) + '.xml',
+                '--tripinfo-output.write-unfinished',
+                '--no-step-log', 'True',
+                '--no-warnings', 'True'
+                ]
+        
         if self.libsumo:
             if self.port is None:
                 traci.start(self.sumo_cmd)

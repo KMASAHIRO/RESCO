@@ -59,6 +59,8 @@ if __name__=="__main__":
     parser.add_argument("--port", type=int, default=-1)
     parser.add_argument("--trial", type=int, default=1)
     parser.add_argument("--libsumo", action="store_true")
+    parser.add_argument("--sumo_no_random", action="store_true")
+    parser.add_argument("--python_no_random", action="store_true")
     parser.add_argument("-e", "--error_output_path", type=str, default="error_message.log")
     args = parser.parse_args()
 
@@ -139,7 +141,8 @@ if __name__=="__main__":
                 no_hidden_layer=args.no_hidden_layer, 
                 model_type=args.ppo_model_type, log_dir=args.log_dir, env_base=args.env_base, 
                 reward_csv=reward_csv, loss_csv=loss_csv, save_actions=args.save_actions, 
-                device=args.device, port=port, trial=args.trial, libsumo=args.libsumo
+                device=args.device, port=port, trial=args.trial, libsumo=args.libsumo, 
+                sumo_no_random=args.sumo_no_random, python_no_random=args.python_no_random
                 )
     except Exception as err:
         data_dir = args.log_dir + args.run_name + '-tr' + str(args.trial) + '-' + args.map_name + '-' + str(len(lights)) + '-' + state_f.__name__ + '-' + reward_f.__name__

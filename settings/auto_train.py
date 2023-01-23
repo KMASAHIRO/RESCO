@@ -28,10 +28,16 @@ if __name__ == "__main__":
     config_agent_name = train_config.get("param", "agent_name")
     episodes = train_config.get("param", "episodes")
     episode_per_learn = train_config.get("param", "episode_per_learn")
-    lr = train_config.get("param", "lr")
+    #lr = train_config.get("param", "lr")
     device = train_config.get("DEFAULT", "device")
 
     learn_options = list()
+    if "sumo_no_random" in train_config["DEFAULT"] and train_config["DEFAULT"]["sumo_no_random"] == True:
+        learn_options.extend(["--sumo_no_random"])
+    if "python_no_random" in train_config["DEFAULT"] and train_config["DEFAULT"]["python_no_random"] == True:
+        learn_options.extend(["--python_no_random"])
+
+
     if "num_hidden_units" in train_config["param"]:
         learn_options.extend(["--num_hidden_units", train_config.get("param", "num_hidden_units")])
     if "no_hidden_layer" in train_config["param"] and train_config["param"]["no_hidden_layer"] == True:
@@ -70,7 +76,7 @@ if __name__ == "__main__":
             "--step_length", str(map_config["step_length"]), "--yellow_length", str(map_config["yellow_length"]), 
             "--step_ratio", str(map_config["step_ratio"]), "--start_time", str(map_config["start_time"]), 
             "--end_time", str(map_config["end_time"]), "--max_distance", str(agent_config["max_distance"]), 
-            "--lights", str(map_config["lights"]), "--warmup", str(map_config["warmup"]), "--lr", lr, 
+            "--lights", str(map_config["lights"]), "--warmup", str(map_config["warmup"]), 
             "--log_dir", "./", "--env_base", env_base, "--reward_csv", reward_csv, "--loss_csv", loss_csv, 
             "--save_actions", "--port", str(port)
             ]
