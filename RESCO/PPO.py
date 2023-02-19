@@ -19,7 +19,8 @@ class OriginalModel(torch.nn.Module):
         self, num_states, num_actions, num_batches, num_layers=1, num_hidden_units=128, 
         temperature=1.0, noise=0.0, encoder_type="fc", embedding_type="random", 
         embedding_no_train=True, embedding_num=5, embedding_decay=0.99, beta=0.25, 
-        eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, 
+        eps=1e-5, noisy_layer_type="action", bbb_layer_type="action", 
+        bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, 
         device="cpu"):
         
         super().__init__()
@@ -36,11 +37,11 @@ class OriginalModel(torch.nn.Module):
         self.embedding_decay = embedding_decay
         self.beta = beta
         self.eps = eps
-        self.noisy_layer_num = noisy_layer_num
-        self.bbb_layer_num = bbb_layer_num
+        self.noisy_layer_type = noisy_layer_type
+        self.bbb_layer_type = bbb_layer_type
         self.device = torch.device(device)
 
-        if self.encoder_type == "fc":
+        if self.encoder_type == "fc" or self.encoder_type == "noisy" or self.encoder_type == "bbb":
             self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
             self.encoder = self.fc_encoder
         elif self.encoder_type == "lstm":
@@ -64,59 +65,30 @@ class OriginalModel(torch.nn.Module):
             self.embedding_avg = torch.nn.Parameter(embedding, requires_grad=False)
             self.cluster_size = torch.nn.Parameter(torch.zeros(self.embedding_num), requires_grad=False)
             self.encoder = self.vq_encoder
-        elif self.encoder_type == "noisy":
-            if self.noisy_layer_num >= 3+self.num_layers:
-                self.fc_first = NoisyLinear(self.num_states, num_hidden_units, device=self.device)
-            else:
-                self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
-            self.encoder = self.fc_encoder
-        elif self.encoder_type == "bbb":
-            if self.bbb_layer_num >= 3+self.num_layers:
-                self.fc_first = BayesianLinear(self.num_states, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-            else:
-                self.fc_first = torch.nn.Linear(self.num_states, num_hidden_units)
-            self.encoder = self.fc_encoder
-            self.log_priors = list()
-            self.log_variational_posteriors = list()
         
         if self.encoder_type == "noisy":
-            if self.noisy_layer_num >= 2:
+            if self.noisy_layer_type == "action":
                 self.fc_actions_layer = NoisyLinear(num_hidden_units, self.num_actions, device=self.device)
-            else:
+                self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
+            elif self.noisy_layer_type == "value":
                 self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
-            
-            if self.noisy_layer_num >= 1:
                 self.fc_value_layer = NoisyLinear(num_hidden_units, 1, device=self.device)
-            else:
-                self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
         elif self.encoder_type == "bbb":
-            if self.bbb_layer_num >= 2:
+            self.log_priors = list()
+            self.log_variational_posteriors = list()
+            if self.bbb_layer_type == "action":
                 self.fc_actions_layer = BayesianLinear(num_hidden_units, self.num_actions, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-            else:
-                self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
-            
-            if self.bbb_layer_num >=1 :
-                self.fc_value_layer = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-            else:
                 self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
+            elif self.bbb_layer_type == "value":
+                self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
+                self.fc_value_layer = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
         else:
             self.fc_actions_layer = torch.nn.Linear(num_hidden_units, self.num_actions)
             self.fc_value_layer = torch.nn.Linear(num_hidden_units, 1)
 
         fc_layers = list()
         for i in range(self.num_layers):
-            if self.encoder_type == "noisy":
-                if self.noisy_layer_num >= 3+i:
-                    fc_layers.append(NoisyLinear(num_hidden_units, num_hidden_units, device=self.device))
-                else:
-                    fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
-            elif self.encoder_type == "bbb":
-                if self.bbb_layer_num >= 3+i:
-                    fc_layers.append(BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2))
-                else:
-                    fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
-            else:
-                fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
+            fc_layers.append(torch.nn.Linear(num_hidden_units, num_hidden_units))
         self.fc_layers = torch.nn.ModuleList(fc_layers)
         self.relu = torch.nn.ReLU()
         self.softmax = torch.nn.Softmax(dim=-1)
@@ -186,23 +158,13 @@ class OriginalModel(torch.nn.Module):
         value = self.fc_value_layer(x)
         
         if self.encoder_type == "bbb" and self.training:
-            if self.bbb_layer_num >= 1:
+            if self.bbb_layer_type == "action":
+                log_prior = self.fc_actions_layer.log_prior
+                log_variational_posterior = self.fc_actions_layer.log_variational_posterior
+            elif self.bbb_layer_type == "value":
                 log_prior = self.fc_value_layer.log_prior
                 log_variational_posterior = self.fc_value_layer.log_variational_posterior
             
-            if self.bbb_layer_num >= 2:
-                log_prior = log_prior + self.fc_actions_layer.log_prio
-                log_variational_posterior = log_variational_posterior + self.fc_actions_layer.log_variational_posterior
-            
-            for i in range(self.num_layers):
-                if self.bbb_layer_num >= 3+i:
-                    log_prior = log_prior + self.fc_layers[i].log_prior
-                    log_variational_posterior = log_variational_posterior + self.fc_layers[i].log_variational_posterior
-            
-            if self.bbb_layer_num >= 3+self.num_layers:
-                log_prior = log_prior + self.fc_first.log_prior
-                log_variational_posterior = log_variational_posterior + self.fc_first.log_variational_posterior
-
             self.log_priors.append(log_prior)
             self.log_variational_posteriors.append(log_variational_posterior)
 
@@ -225,27 +187,16 @@ class OriginalModel(torch.nn.Module):
         self.log_variational_posteriors = list()
     
     def sample_noise(self):
-        if self.noisy_layer_num >= 3+self.num_layers:
-            self.fc_first.sample_noise()
-        if self.noisy_layer_num >= 2:
+        if self.noisy_layer_type == "action":
             self.fc_actions_layer.sample_noise()
-        if self.noisy_layer_num >= 1:
+        elif self.noisy_layer_type == "value":
             self.fc_value_layer.sample_noise()
-        for i in range(self.num_layers):
-            if self.noisy_layer_num >= 3+i:
-                self.fc_layers[i].sample_noise()
     
     def remove_noise(self):
-        if self.noisy_layer_num >= 3+self.num_layers:
-            self.fc_first.remove_noise()
-        if self.noisy_layer_num >= 2:
+        if self.noisy_layer_type == "action":
             self.fc_actions_layer.remove_noise()
-        if self.noisy_layer_num >= 1:
+        elif self.noisy_layer_type == "value":
             self.fc_value_layer.remove_noise()
-        for i in range(self.num_layers):
-            if self.noisy_layer_num >= 3+i:
-                self.fc_layers[i].remove_noise()
-
 
 def lecun_init(layer, gain=1):
     if isinstance(layer, (nn.Conv2d, nn.Linear)):
@@ -263,8 +214,8 @@ class DefaultModel(torch.nn.Module):
     def __init__(
         self, obs_space, act_space, num_batches, num_hidden_units=64, temperature=1.0, noise=0.0, 
         encoder_type=None, embedding_type="random", embedding_no_train=True, embedding_num=5, 
-        embedding_decay=0.99, beta=0.25, eps=1e-5, noisy_layer_num=4, bbb_layer_num=4, 
-        bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, no_hidden_layer=False, device="cpu"):
+        embedding_decay=0.99, beta=0.25, eps=1e-5, noisy_layer_type="action", bbb_layer_type="action", 
+        bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, device="cpu"):
         
         super().__init__()
         self.num_batches = num_batches
@@ -277,9 +228,8 @@ class DefaultModel(torch.nn.Module):
         self.embedding_decay = embedding_decay
         self.beta = beta
         self.eps = eps
-        self.noisy_layer_num = noisy_layer_num
-        self.bbb_layer_num = bbb_layer_num
-        self.no_hidden_layer = no_hidden_layer
+        self.noisy_layer_type = noisy_layer_type
+        self.bbb_layer_type = bbb_layer_type
         self.device = torch.device(device)
 
         def conv2d_size_out(size, kernel_size=2, stride=1):
@@ -290,52 +240,25 @@ class DefaultModel(torch.nn.Module):
 
         self.conv = lecun_init(nn.Conv2d(obs_space[0], num_hidden_units, kernel_size=(2, 2)))
         self.flatten = nn.Flatten()
+        self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
+        self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
         if self.encoder_type == "noisy":
-            if self.noisy_layer_num >= 4:
-                self.linear1 = NoisyLinear(h*w*num_hidden_units, num_hidden_units, device=self.device)
-            else:
-                self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
-            
-            if not self.no_hidden_layer:
-                if self.noisy_layer_num >= 3:
-                    self.linear2 = NoisyLinear(num_hidden_units, num_hidden_units, device=self.device)
-                else:
-                    self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
-
-            if self.noisy_layer_num >= 2:
+            if self.noisy_layer_type == "action":
                 self.linear4_1 = NoisyLinear(num_hidden_units, act_space, device=self.device)
-            else:
+                self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
+            if self.noisy_layer_type == "value":
                 self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
-            
-            if self.noisy_layer_num >= 1:
                 self.linear4_2 = NoisyLinear(num_hidden_units, 1, device=self.device)
             else:
                 self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         elif self.encoder_type == "bbb":
-            if self.bbb_layer_num >= 4:
-                self.linear1 = BayesianLinear(h*w*num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-            else:
-                self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
-            
-            if not self.no_hidden_layer:
-                if self.bbb_layer_num >= 3:
-                    self.linear2 = BayesianLinear(num_hidden_units, num_hidden_units, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-                else:
-                    self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
-            
-            if self.bbb_layer_num >= 2:
+            if self.bbb_layer_type == "action":
                 self.linear4_1 = BayesianLinear(num_hidden_units, act_space, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-            else:
-                self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
-            
-            if self.bbb_layer_num >= 1:
-                self.linear4_2 = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
-            else:
                 self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
+            elif self.bbb_layer_type == "value":
+                self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
+                self.linear4_2 = BayesianLinear(num_hidden_units, 1, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
         else:
-            self.linear1 = lecun_init(nn.Linear(h*w*num_hidden_units, num_hidden_units))
-            if not self.no_hidden_layer:
-                self.linear2 = lecun_init(nn.Linear(num_hidden_units, num_hidden_units))
             self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
             self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         self.relu = nn.ReLU()
@@ -366,9 +289,8 @@ class DefaultModel(torch.nn.Module):
         x = self.flatten(x)
         x = self.linear1(x)
         x = self.relu(x)
-        if not self.no_hidden_layer:
-            x = self.linear2(x)
-            x = self.relu(x)
+        x = self.linear2(x)
+        x = self.relu(x)
 
         if self.noise != 0.0 and self.training:
             x = x + torch.normal(torch.zeros(x.shape), torch.ones(x.shape)*self.noise).to(self.device)
@@ -393,23 +315,13 @@ class DefaultModel(torch.nn.Module):
         value = self.linear4_2(x)
 
         if self.encoder_type == "bbb" and self.training:
-            if self.bbb_layer_num >= 1:
+            if self.bbb_layer_type == "action":
+                log_prior = self.linear4_1.log_prior
+                log_variational_posterior = self.linear4_1.log_variational_posterior
+            elif self.bbb_layer_type == "value":
                 log_prior = self.linear4_2.log_prior
                 log_variational_posterior = self.linear4_2.log_variational_posterior
-            
-            if self.bbb_layer_num >= 2:
-                log_prior = log_prior + self.linear4_1.log_prior
-                log_variational_posterior = log_variational_posterior + self.linear4_1.log_variational_posterior
-            
-            
-            if self.bbb_layer_num >= 3 and not self.no_hidden_layer:
-                log_prior = log_prior + self.linear2.log_prior
-                log_variational_posterior = log_variational_posterior + self.linear2.log_variational_posterior
-            
-            if self.bbb_layer_num >= 4:
-                log_prior = log_prior + self.linear1.log_prior
-                log_variational_posterior = log_variational_posterior + self.linear1.log_variational_posterior
-            
+                        
             self.log_priors.append(log_prior)
             self.log_variational_posteriors.append(log_variational_posterior)
         
@@ -432,23 +344,15 @@ class DefaultModel(torch.nn.Module):
         self.log_variational_posteriors = list()
     
     def sample_noise(self):
-        if self.noisy_layer_num >= 4:
-            self.linear1.sample_noise()
-        if self.noisy_layer_num >= 3 and not self.no_hidden_layer:
-            self.linear2.sample_noise()
-        if self.noisy_layer_num >= 2:
+        if self.noisy_layer_type == "action":
             self.linear4_1.sample_noise()
-        if self.noisy_layer_num >= 1:
+        elif self.noisy_layer_type == "value":
             self.linear4_2.sample_noise()
     
     def remove_noise(self):
-        if self.noisy_layer_num >= 4:
-            self.linear1.remove_noise()
-        if self.noisy_layer_num >= 3 and not self.no_hidden_layer:
-            self.linear2.remove_noise()
-        if self.noisy_layer_num >= 2:
+        if self.noisy_layer_type == "action":
             self.linear4_1.remove_noise()
-        if self.noisy_layer_num >= 1:
+        elif self.noisy_layer_type == "value":
             self.linear4_2.remove_noise()
 
 def _elementwise_clip(x, x_min, x_max):

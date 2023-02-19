@@ -18,7 +18,8 @@ def train_agent(
     episode_per_learn=2, episodes=100, step_length=10, yellow_length=4, step_ratio=1, 
     end_time=3600, max_distance=200, lights=(), warmup=0, num_layers=1, num_hidden_units=512, 
     lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", lstm_len=5, 
-    embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
+    embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, 
+    noisy_layer_num=1, bbb_layer_num=1, bbb_pi=0.5, beta=0.25, 
     embedding_no_train=False, embedding_start_train=None, log_dir="./", env_base="../RESCO/environments/", 
     reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False):
     
@@ -46,7 +47,8 @@ def train_agent(
         num_states=num_states, num_traffic_lights=len(traffic_light_ids), num_actions=num_actions, 
         num_layers=num_layers, num_hidden_units=num_hidden_units, temperature=temperature, noise=noise, 
         encoder_type=encoder_type, lr=lr, decay_rate=decay_rate, embedding_type=embedding_type, 
-        embedding_num=embedding_num, embedding_decay=embedding_decay, eps=eps, beta=beta, 
+        embedding_num=embedding_num, embedding_decay=embedding_decay, eps=eps, 
+        noisy_layer_num=noisy_layer_num, bbb_layer_num=bbb_layer_num, bbb_pi=bbb_pi, beta=beta, 
         embedding_no_train=embedding_no_train, embedding_start_train=embedding_start_train, 
         is_train=True, device=device)
 
@@ -178,12 +180,12 @@ def train_PPO(
     run_name, map_name, net_file, route_file, state_f, reward_f, 
     episode_per_learn=2, episodes=100, step_length=10, yellow_length=4, step_ratio=1, 
     start_time=0, end_time=3600, max_distance=200, lights=(), warmup=0, num_layers=1, 
-    num_hidden_units=512, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
+    num_hidden_units=64, lr=3e-5, decay_rate=0.01, temperature=1.0, noise=0.0, encoder_type="fc", 
     lstm_len=5, embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, beta=0.25, 
     update_interval=1024, minibatch_size=256, epochs=4, entropy_coef=0.001, embedding_no_train=False, 
-    embedding_start_train=None, noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, bbb_sigma1=-0, 
-    bbb_sigma2=-6, no_hidden_layer=False,
-    model_type="original", log_dir="./", env_base="../RESCO/environments/", 
+    embedding_start_train=None, noisy_layer_type="action", bbb_layer_type="action", 
+    bbb_pi=0.5, bbb_sigma1=-0, bbb_sigma2=-6, 
+    model_type="default", log_dir="./", env_base="../RESCO/environments/", 
     reward_csv=None, loss_csv=None, save_actions=False, device="cpu", port=None, trial=1, libsumo=False, 
     sumo_no_random=False, python_no_random=False
     ):
@@ -230,10 +232,9 @@ def train_PPO(
             "temperature": temperature, "noise": noise, "encoder_type": encoder_type, 
             "embedding_type": embedding_type, "embedding_no_train": embedding_no_train, 
             "embedding_num": embedding_num, "embedding_decay": embedding_decay, 
-            "beta": beta, "eps": eps, "noisy_layer_num": noisy_layer_num, 
-            "bbb_layer_num": bbb_layer_num, "bbb_pi": bbb_pi, "bbb_sigma1": bbb_sigma1, 
-            "bbb_sigma2": bbb_sigma2, "no_hidden_layer": no_hidden_layer, 
-            "device": device
+            "beta": beta, "eps": eps, "noisy_layer_type": noisy_layer_type, 
+            "bbb_layer_type": bbb_layer_type, "bbb_pi": bbb_pi, "bbb_sigma1": bbb_sigma1, 
+            "bbb_sigma2": bbb_sigma2, "device": device 
         }
 
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, entropy_coef)
@@ -243,9 +244,9 @@ def train_PPO(
             "noise": noise, "encoder_type": encoder_type, "embedding_type": embedding_type, 
             "embedding_no_train": embedding_no_train, "embedding_num": embedding_num, 
             "embedding_decay": embedding_decay, "beta": beta, "eps": eps, 
-            "noisy_layer_num": noisy_layer_num, "bbb_layer_num": bbb_layer_num, 
+            "noisy_layer_type": noisy_layer_type, "bbb_layer_type": bbb_layer_type, 
             "bbb_pi": bbb_pi, "bbb_sigma1": bbb_sigma1, "bbb_sigma2": bbb_sigma2, 
-            "no_hidden_layer": no_hidden_layer, "device": device
+            "device": device 
         }
         
         agent = IPPO(agt_config, obs_act, map_name, trial, model_type, model_param, update_interval, minibatch_size, epochs, entropy_coef, lr, decay_rate)

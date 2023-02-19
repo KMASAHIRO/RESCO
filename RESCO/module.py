@@ -9,7 +9,7 @@ class PolicyFunction(torch.nn.Module):
         self, num_states, num_traffic_lights, num_actions, num_layers=1, 
         num_hidden_units=128, temperature=1.0, noise=0.0, encoder_type="fc", 
         embedding_type="random", embedding_num=5, embedding_decay=0.99, eps=1e-5, 
-        noisy_layer_num=4, bbb_layer_num=4, bbb_pi=0.5, device="cpu"):
+        noisy_layer_num=1, bbb_layer_num=1, bbb_pi=0.5, device="cpu"):
         
         super().__init__()
         self.num_states = num_states

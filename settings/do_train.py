@@ -29,7 +29,7 @@ if __name__=="__main__":
     parser.add_argument("--max_distance", type=int, default=200)
     parser.add_argument("--lights", type=str, default="()")
     parser.add_argument("--warmup", type=int, default=0)
-    parser.add_argument("--num_hidden_units", type=int, default=512)
+    parser.add_argument("--num_hidden_units", type=int, default=64)
     parser.add_argument("--lr", type=float, default=3e-5)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--noise", type=float, default=0.0)
@@ -44,12 +44,13 @@ if __name__=="__main__":
     parser.add_argument("--entropy_coef", type=float, default=0.001)
     parser.add_argument("--embedding_no_train", action="store_true")
     parser.add_argument("--embedding_start_train", type=int, default=0)
-    parser.add_argument("--noisy_layer_num", type=int, default=4)
-    parser.add_argument("--bbb_layer_num", type=int, default=4)
+    parser.add_argument("--noisy_layer_num", type=int, default=1)
+    parser.add_argument("--bbb_layer_num", type=int, default=1)
+    parser.add_argument("--noisy_layer_type", type=str, default="action")
+    parser.add_argument("--bbb_layer_type", type=str, default="action")
     parser.add_argument("--bbb_pi", type=float, default=0.5)
     parser.add_argument("--bbb_sigma1", type=float, default=-0)
     parser.add_argument("--bbb_sigma2", type=float, default=-6)
-    parser.add_argument("--no_hidden_layer", action="store_true")
     parser.add_argument("--log_dir", type=str, default="./")
     parser.add_argument("--env_base", type=str, default="../RESCO/environments/")
     parser.add_argument("--reward_csv", type=str, default="")
@@ -117,7 +118,9 @@ if __name__=="__main__":
                 num_hidden_units=args.num_hidden_units, lr=args.lr, decay_rate=0.01, 
                 temperature=args.temperature, noise=args.noise, 
                 encoder_type=args.encoder_type, lstm_len=5, embedding_type=args.embedding_type, 
-                embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, beta=args.beta, 
+                embedding_num=args.embedding_num, embedding_decay=args.embedding_decay, eps=1e-5, 
+                noisy_layer_num=args.noisy_layer_num, bbb_layer_num=args.bbb_layer_num, bbb_pi=args.bbb_pi, 
+                beta=args.beta, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
                 log_dir=args.log_dir, env_base=args.env_base, reward_csv=reward_csv, loss_csv=loss_csv, 
                 save_actions=args.save_actions, device=args.device, port=port, trial=args.trial, libsumo=args.libsumo
@@ -136,9 +139,8 @@ if __name__=="__main__":
                 update_interval=args.update_interval, minibatch_size=args.minibatch_size, epochs=args.epochs, 
                 entropy_coef = args.entropy_coef, 
                 embedding_no_train=args.embedding_no_train, embedding_start_train=embedding_start_train, 
-                noisy_layer_num=args.noisy_layer_num, bbb_layer_num=args.bbb_layer_num, bbb_pi=args.bbb_pi, 
+                noisy_layer_type=args.noisy_layer_type, bbb_layer_type=args.bbb_layer_type, bbb_pi=args.bbb_pi, 
                 bbb_sigma1=args.bbb_sigma1, bbb_sigma2=args.bbb_sigma2, 
-                no_hidden_layer=args.no_hidden_layer, 
                 model_type=args.ppo_model_type, log_dir=args.log_dir, env_base=args.env_base, 
                 reward_csv=reward_csv, loss_csv=loss_csv, save_actions=args.save_actions, 
                 device=args.device, port=port, trial=args.trial, libsumo=args.libsumo, 
