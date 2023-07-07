@@ -2,7 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from .map_config import map_configs
+from RESCO.config.map_config import map_configs
 
 import xml.etree.ElementTree as ET
 

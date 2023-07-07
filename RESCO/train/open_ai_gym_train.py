@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import gym
 
-from .module import Agent
-from .PPO import IPPO
-from .agent_config import agent_configs
+from RESCO.REINFORCE.module import Agent
+from RESCO.PPO.PPO import IPPO
+from RESCO.config.agent_config import agent_configs
 
 # 学習させる関数
 def train_agent_gym(

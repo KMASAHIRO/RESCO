@@ -6,11 +6,11 @@ import pandas as pd
 import traci
 import random
 
-from .multi_signal import MultiSignal
-from .module import Agent
-from .PPO import IPPO
+from RESCO.environments_framework.multi_signal import MultiSignal
+from RESCO.REINFORCE.module import Agent
+from RESCO.PPO.PPO import IPPO
 from .analysis import read_csv, read_xml
-from .agent_config import agent_configs
+from RESCO.config.agent_config import agent_configs
 
 # 学習させる関数
 def train_agent(

@@ -1,9 +1,8 @@
-numpy
+numpy==1.16.5
 gym==0.18.3
-gym
 pfrl==0.2.1
-eclipse-sumo
-libsumo
-traci
-sumolib
-scikit-learn
+eclipse-sumo==1.13.0
+libsumo==1.13.0
+traci==1.13.0
+sumolib==1.13.0
+scikit-learn==0.24.2

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .mdp_config import mdp_configs
+from RESCO.config.mdp_config import mdp_configs
 
 
 def wait(signals):

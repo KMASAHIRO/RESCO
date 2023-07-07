@@ -4,11 +4,11 @@ import torch
 import numpy as np
 import traci
 
-from .multi_signal import MultiSignal
-from .module import Agent
-from .PPO import IPPO
+from RESCO.environments_framework.multi_signal import MultiSignal
+from RESCO.REINFORCE.module import Agent
+from RESCO.PPO.PPO import IPPO
 from .analysis import read_csv, read_xml
-from .agent_config import agent_configs
+from RESCO.config.agent_config import agent_configs
 
 # PPOのテスト
 def test_PPO(

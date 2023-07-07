@@ -9,9 +9,9 @@ import pfrl.initializers
 from pfrl.agents import PPO
 from pfrl.policies import SoftmaxCategoricalHead
 
-from .agent import IndependentAgent, Agent
-from .NoisyNet import NoisyLinear
-from .BBB import BayesianLinear
+from RESCO.PPO.agent import IndependentAgent, Agent
+from RESCO.layers.NoisyNet import NoisyLinear
+from RESCO.layers.BBB import BayesianLinear
 
 # 方策関数
 class OriginalModel(torch.nn.Module):

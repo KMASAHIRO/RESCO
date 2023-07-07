@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-from .NoisyNet import NoisyLinear
-from .BBB import BayesianLinear
+from RESCO.layers.NoisyNet import NoisyLinear
+from RESCO.layers.BBB import BayesianLinear
 
 # 方策関数
 class PolicyFunction(torch.nn.Module):
