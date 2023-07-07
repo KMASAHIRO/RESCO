@@ -1,6 +1,6 @@
 from ast import parse
-from RESCO.train import train_agent, train_PPO
-from RESCO import states, rewards
+from RESCO.train.train import train_agent, train_PPO
+from RESCO.environments_framework import states, rewards
 import subprocess
 import argparse
 import random

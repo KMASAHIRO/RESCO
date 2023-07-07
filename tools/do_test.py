@@ -1,8 +1,8 @@
 import configparser
-from RESCO.test import test_PPO
-from RESCO import states, rewards
-from RESCO.agent_config import agent_configs
-from RESCO.map_config import map_configs
+from RESCO.train.test import test_PPO
+from RESCO.environments_framework import states, rewards
+from RESCO.config.agent_config import agent_configs
+from RESCO.config.map_config import map_configs
 import subprocess
 import random
 import numpy as np

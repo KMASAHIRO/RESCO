@@ -1,5 +1,5 @@
 from ast import parse
-from RESCO.open_ai_gym_train import train_agent_gym, train_PPO_gym
+from RESCO.train.open_ai_gym_train import train_agent_gym, train_PPO_gym
 import subprocess
 import argparse
 import logging
