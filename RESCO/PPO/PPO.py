@@ -249,8 +249,6 @@ class DefaultModel(torch.nn.Module):
             if self.noisy_layer_type == "value":
                 self.linear4_1 = lecun_init(nn.Linear(num_hidden_units, act_space), 1e-2)
                 self.linear4_2 = NoisyLinear(num_hidden_units, 1, device=self.device)
-            else:
-                self.linear4_2 = lecun_init(nn.Linear(num_hidden_units, 1))
         elif self.encoder_type == "bbb":
             if self.bbb_layer_type == "action":
                 self.linear4_1 = BayesianLinear(num_hidden_units, act_space, device=self.device, pi=bbb_pi, sigma1=bbb_sigma1, sigma2=bbb_sigma2)
